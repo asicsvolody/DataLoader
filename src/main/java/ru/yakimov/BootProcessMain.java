@@ -90,14 +90,14 @@ public class BootProcessMain {
 
     private static void printFutureResults(String rootJobName, Future<Integer> future) throws ExecutionException, InterruptedException, SQLException {
         StringBuilder str = new StringBuilder(rootJobName);
-        switch (future.get()){
-            case 0:
-                str.append(" completed successfully.");
-                break;
-            case 1:
-                str.append(" completed with error");
-                break;
-        }
+            switch (future.get()) {
+                case 0:
+                    str.append(" completed successfully.");
+                    break;
+                case 1:
+                    str.append(" completed with error");
+                    break;
+            }
 
         System.out.println(str.toString());
         Log.writeRoot(Assets.MAIN_PROS, str.toString());

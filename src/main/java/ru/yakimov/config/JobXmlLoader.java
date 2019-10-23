@@ -107,7 +107,8 @@ public class JobXmlLoader {
                 jobConf.setDirTo(attribute.getValue());
             }
             if (attribute.getName().toString().equals(PARTITION)) {
-                jobConf.addPartitions(attribute.getValue());
+
+                jobConf.setPartitions(attribute.getValue());
             }
         }
         return jobConf;

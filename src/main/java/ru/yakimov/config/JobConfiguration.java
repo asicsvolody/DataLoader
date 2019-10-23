@@ -80,12 +80,12 @@ public class JobConfiguration{
         this.dirTo = dirTo;
     }
 
-    public void addPartitions(String partitionLine) {
+    public void setPartitions(String partitionLine) {
         if(partitions == null)
             partitions = new ArrayList<>();
 
         for (String partition : partitionLine.split(",")) {
-            this.partitions.add(partitionLine.trim());
+            this.partitions.add(partition.trim());
         }
     }
 

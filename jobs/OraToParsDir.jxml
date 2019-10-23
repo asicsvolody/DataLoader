@@ -1,12 +1,12 @@
 <!--?xml version="1.0" encoding="UTF-8"?-->
 <config>
     <rootJob>
-<!--        <job jobClass="ru.yakimov.Jobs.ImportSqoopDbToDirJob" jobDirTo="/tmp/data" partition="user_age" stage="1">-->
+        <job jobClass="ru.yakimov.Jobs.ImportSqoopDbToDirJob" jobDirTo="/tmp/data" partition="user_age" stage="1">
 
-<!--             <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"-->
-<!--                       schema="usersDB" table="users" primaryKey="user_id"/>-->
+             <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
+                       schema="usersDB" table="users" primaryKey="user_id"/>
 
-<!--        </job>-->
+        </job>
         <job jobClass="ru.yakimov.Jobs.PartitionSparkDataJob" jobDirFrom="/tmp/data" jobDirTo="/data" partition="user_age" stage="2">
             <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
                        schema="usersDB" table="users" primaryKey="user_id"/>

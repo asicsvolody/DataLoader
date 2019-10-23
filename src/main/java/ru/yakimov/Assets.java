@@ -21,6 +21,9 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Assets {
@@ -77,12 +80,14 @@ public class Assets {
         Log.writeRoot(MAIN_PROS, "System Runtime have gotten ");
 
 
-        String warehouseLocation = new File("/user/hive/warehouse").getAbsolutePath();
+        String warehouseLocation = new File("/usr/local/Cellar/hive/3.1.2/libexec").getAbsolutePath();
 
         spark = SparkSession
                 .builder()
                 .appName("SparkSqoopWork")
                 .config("spark.master", "local")
+                .config ("hive.exec.dynamic.partition", "true")
+                .config ("hive.exec.dynamic.partition.mode", "nonstrict")
                 .config("spark.sql.warehouse.dir", warehouseLocation)
                 .config("spark.hadoop.fs.default.name", "hdfs://localhost:8020")
                 .config("spark.hadoop.fs.defaultFS", "hdfs://localhost:8020")
@@ -103,8 +108,7 @@ public class Assets {
         }
 
         Log.writeRoot(MAIN_PROS, "Hadoop file system have gotten ");
-
-
+        
     }
 
     public AppConfiguration getConf() {
