@@ -54,7 +54,7 @@ public class ImportSqoopDbToDirJob extends Job {
                 ,SqoopUtils.getHadoopPasswordPath(jobConfig.getJobName())
                 ,dbConfig.getTable()
                 , jobConfig.getDirTo()
-                ,dbConfig.getPrimaryKeys().next()
+                ,dbConfig.getPrimaryKeys().get(0)
         ));
 
         Log.write(jobConfig, "Waiting of end sqoop process");

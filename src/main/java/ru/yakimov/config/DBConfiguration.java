@@ -78,8 +78,8 @@ public class DBConfiguration {
     }
 
 
-    public Iterator<String> getPrimaryKeys() {
-        return primaryKeys.iterator();
+    public ArrayList<String> getPrimaryKeys() {
+        return primaryKeys;
     }
 
     @Override

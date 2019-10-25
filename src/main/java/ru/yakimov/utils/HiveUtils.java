@@ -24,7 +24,44 @@ import java.util.List;
 
 import static org.apache.spark.sql.types.DataTypes.*;
 
-public class HiveTable {
+public class HiveUtils {
+
+    public static void createHiveTable(JobConfiguration jConfig, String[] colsArr) throws Exception {
+        SparkSession spark = Assets.getInstance().getSpark();
+
+        String schema = jConfig.getDbConfiguration().getSchema();
+
+        if(schema == null){
+            throw new Exception("There is not schema name");
+        }
+
+        String table = jConfig.getDbConfiguration().getTable();
+
+        if(table == null){
+            throw new Exception("There is not table name");
+        }
+
+        Log.write(jConfig, "Creating database");
+
+        spark.sql(String.format("CREATE DATABASE IF NOT EXISTS %s LOCATION '/%s'",schema, schema));
+
+        Log.write(jConfig, "Creating table");
+
+        spark.sql(String.format("DROP TABLE IF EXISTS %s.%s", schema, jConfig.getDbConfiguration().getTable()));
+
+        HdfsUtils.deleteDirWithLog(jConfig, Assets.SEPARATOR +schema + Assets.SEPARATOR+ table);
+
+
+        String cols = String.join(", ", colsArr);
+
+        System.out.println(cols);
+
+        spark.sql(String.format("CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s \n" +
+                " (%s) \n" +
+                " STORED AS PARQUET \n" +
+                " LOCATION '/%s/%s' ",schema, table, cols, schema, table ));
+
+    }
 
 
     public static void createHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
@@ -47,9 +84,9 @@ public class HiveTable {
         if(table == null){
             throw new Exception("There is not table name");
         }
-        String partitions = getPartitionStr(type, jConfig.getPartitions());
+        String partitions = String.join(", ", getPartitionStr(type, jConfig.getPartitions()));
 
-        String cols = getUsualFieldsStr(type, jConfig.getPartitions());
+        String cols = String.join(", ", getUsualFieldsStr(type, jConfig.getPartitions()));
 
         spark.sql(String.format("CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s \n" +
                 " (%s) \n" +
@@ -59,7 +96,7 @@ public class HiveTable {
 
     }
 
-    public static String getPartitionStr(StructType type, String[] partitions) {
+    public static String[] getPartitionStr(StructType type, String[] partitions) {
 
         List<String> list = new ArrayList<>();
         for (String partition : partitions) {
@@ -70,17 +107,26 @@ public class HiveTable {
             list.add(field.name().toLowerCase()+" "+convertSparkTypeToHiveTypeStr(field.dataType()));
         }
 
-        return String.join(",",list.toArray(new String[0]));
+        return list.toArray(new String[0]);
     }
 
-    private static String getUsualFieldsStr(StructType type, String[] partitions) {
+    public static List<String> getFormattingCols(StructType type) {
+
+        List<String> list = new ArrayList<>();
+        for (StructField field : type.fields()) {
+                list.add(field.name().toLowerCase() + " " + convertSparkTypeToHiveTypeStr(field.dataType()));
+        }
+        return list;
+    }
+
+    private static String[] getUsualFieldsStr(StructType type, String[] partitions) {
         List<String> list = new ArrayList<>();
         for (StructField field : type.fields()) {
             if(!LoaderUtils.isPartition(field.name(), partitions)){
                 list.add(field.name().toLowerCase()+" "+convertSparkTypeToHiveTypeStr(field.dataType()));
             }
         }
-        return String.join(",",list.toArray(new String[0]));
+        return list.toArray(new String[0]);
     }
 
 

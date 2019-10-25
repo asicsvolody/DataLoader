@@ -48,6 +48,7 @@ public class JobConfiguration{
         return dirTo;
     }
 
+
     public String[] getPartitions() {
         return partitions.toArray(new String[0]);
     }

@@ -6,6 +6,7 @@
 
 package ru.yakimov.config;
 
+import jodd.util.MathUtil;
 import ru.yakimov.Assets;
 import ru.yakimov.MySqlDB.Log;
 
@@ -30,6 +31,8 @@ public class JobXmlLoader {
     private static final String STAGE = "stage";
     private static final String JOB_DIR_FROM = "jobDirFrom";
     private static final String JOB_DIR_TO = "jobDirTo";
+
+
     private static final String PARTITION = "partition";
 
     private static final String DB_CONF = "dbConf";
@@ -150,7 +153,7 @@ public class JobXmlLoader {
         String[] jobClassArr = classPath.split("\\.");
         String className = jobClassArr[jobClassArr.length-1];
         String data = getFullTime();
-        return className + "_" + data;
+        return className + "_" + data + MathUtil.randomInt(0, 1000);
     }
 
     private static String getFullTime(){

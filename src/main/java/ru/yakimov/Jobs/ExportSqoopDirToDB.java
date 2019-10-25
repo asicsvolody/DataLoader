@@ -42,7 +42,7 @@ public class ExportSqoopDirToDB extends Job {
                 ,dbConfig.getUser()
                 ,SqoopUtils.getHadoopPasswordPath(jobConfig.getJobName())
                 ,dbConfig.getTable()
-                ,jobConfig.getDirFrom().get(0))
+                ,jobConfig.getDirTo())
         );
 
         Log.write(jobConfig, "Waiting of end sqoop process");
