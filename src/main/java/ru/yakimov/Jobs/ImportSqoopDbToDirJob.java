@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Класс задания импорта базы в директорию hdfs, является компонентом Spring
  */
 
 package ru.yakimov.Jobs;
@@ -21,11 +23,9 @@ import java.sql.SQLException;
 @Component
 public class ImportSqoopDbToDirJob extends Job {
 
-
     @Override
     public Integer call() throws SQLException, IOException, XMLStreamException, InterruptedException {
         Log.write(jobConfig, "Sqoop get task import");
-
 
         DBConfiguration dbConfig = jobConfig.getDbConfiguration();
 
@@ -33,12 +33,9 @@ public class ImportSqoopDbToDirJob extends Job {
 
         SqoopUtils.createPassword(dbConfig.getPassword(), jobConfig);
 
-
         HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirTo());
 
         Log.write(jobConfig, "Sqoop run process");
-
-
         Process process = Assets.getInstance().getRt().exec(String.format("sqoop import " +
                         "--connect jdbc:mysql://%s:%s/%s?serverTimezone=UTC&zeroDateTimeBehavior=CONVERT_TO_NULL " +
                         "--username %s " +
@@ -58,11 +55,9 @@ public class ImportSqoopDbToDirJob extends Job {
         ));
 
         Log.write(jobConfig, "Waiting of end sqoop process");
-
         process.waitFor();
 
         SqoopUtils.writeProcessMessageStream(process, jobConfig);
-
 
         SqoopUtils.writeResSqoop(jobConfig, process.exitValue());
 

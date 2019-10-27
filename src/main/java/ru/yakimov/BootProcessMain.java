@@ -2,6 +2,9 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Главный класс программы с main методом
+ * Осуществляет запуск конфигурации задач и запуск корневый задач к исполнению
  */
 
 package ru.yakimov;
@@ -73,8 +76,10 @@ public class BootProcessMain {
         finally {
 
             try {
-                for (RootJob rootJob : rootJobs) {
-                    LogsFileWriter.writeRootLog(rootJob.getRootJobName());
+                if (rootJobs != null) {
+                    for (RootJob rootJob : rootJobs) {
+                        LogsFileWriter.writeRootLog(rootJob.getRootJobName());
+                    }
                 }
                 LogsFileWriter.writeRootLog(Assets.MAIN_PROS);
             } catch (Exception e) {
@@ -88,16 +93,25 @@ public class BootProcessMain {
 
     }
 
+    /**
+     * Метод записи результатов Future
+     * @param rootJobName
+     * @param future
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws SQLException
+     */
     private static void printFutureResults(String rootJobName, Future<Integer> future) throws ExecutionException, InterruptedException, SQLException {
         StringBuilder str = new StringBuilder(rootJobName);
-            switch (future.get()) {
-                case 0:
-                    str.append(" completed successfully.");
-                    break;
-                case 1:
-                    str.append(" completed with error");
-                    break;
-            }
+
+        switch (future.get()) {
+            case 0:
+                str.append(" completed successfully.");
+                break;
+            case 1:
+                str.append(" completed with error");
+                break;
+        }
 
         System.out.println(str.toString());
         Log.writeRoot(Assets.MAIN_PROS, str.toString());

@@ -2,6 +2,15 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Singleton класс конфигурироования и доступа к инструментам
+ * Хранения общих констант
+ * SPARK
+ * HADOOP FS
+ * RUNTIME
+ *
+ * Конфигураций
+ *
  */
 
 package ru.yakimov;
@@ -29,7 +38,6 @@ import java.util.Map;
 public class Assets {
 
     public static final String SEPARATOR = "/";
-    public static final String STRUCT_JSON_FILE = "struct.json";
 
     private final String CONF_FILE_PATH = "conf.xml";
     public static final String MAIN_PROS = JobXmlLoader.createNameWithData("SYSTEM_PROSES");
@@ -80,7 +88,7 @@ public class Assets {
         Log.writeRoot(MAIN_PROS, "System Runtime have gotten ");
 
 
-        String warehouseLocation = new File("/usr/local/Cellar/hive/3.1.2/libexec").getAbsolutePath();
+        String warehouseLocation = new File("./metastore_db").getAbsolutePath();
 
         spark = SparkSession
                 .builder()
@@ -88,6 +96,7 @@ public class Assets {
                 .config("spark.master", "local")
                 .config ("hive.exec.dynamic.partition", "true")
                 .config ("hive.exec.dynamic.partition.mode", "nonstrict")
+//                .config("hive.metastore.uris", "jdbc:mysql://localhost/metastore?serverTimezone=UTC&zeroDateTimeBehavior=CONVERT_TO_NULL")
                 .config("spark.sql.warehouse.dir", warehouseLocation)
                 .config("spark.hadoop.fs.default.name", "hdfs://localhost:8020")
                 .config("spark.hadoop.fs.defaultFS", "hdfs://localhost:8020")

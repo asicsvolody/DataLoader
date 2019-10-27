@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Класс статическич Hive методов
  */
 
 package ru.yakimov.utils;
@@ -9,24 +11,89 @@ package ru.yakimov.utils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataType;
-import org.apache.spark.sql.types.StructField;
+
 import org.apache.spark.sql.types.StructType;
 import ru.yakimov.Assets;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.config.JobConfiguration;
 
-import javax.xml.stream.XMLStreamException;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-import static org.apache.spark.sql.types.DataTypes.*;
 
 public class HiveUtils {
 
-    public static void createHiveTable(JobConfiguration jConfig, String[] colsArr) throws Exception {
+    /**
+     * Динамический insert в таблицу hive c автоматическим заполнением недостающий полей значениями null
+     *
+     * @param jobConf
+     * @param dirFrom
+     * @throws Exception
+     */
+    public static void insetToHiveTable(JobConfiguration jobConf, String dirFrom ) throws Exception {
+        SparkSession spark = Assets.getInstance().getSpark();
+        String databaseTo = jobConf.getDbConfiguration().getSchema();
+        String tableTo = jobConf.getDbConfiguration().getTable();
+
+        Log.write(jobConf, "Read table columns");
+
+        List<String> tableCols = spark
+                .sql(String.format("DESC %s.%s",databaseTo,tableTo))
+                .toJavaRDD()
+                .map(row -> row.getString(0).trim())
+                .filter(v -> !v.startsWith("#"))
+                .collect();
+
+        Log.write(jobConf, tableCols.toString());
+
+        Log.write(jobConf, "Spark read data from dir "+ dirFrom);
+
+        Dataset<Row> data = spark.read()
+                .parquet(dirFrom + Assets.SEPARATOR + "*.parquet");
+
+        data.createOrReplaceTempView("tmp_table");
+
+        data.show();
+
+        String usualCols = String.join(","
+                , LoaderUtils.getColsAndNullNoPartitions(
+                        tableCols,
+                        data.schema().fieldNames(),
+                        jobConf.getPartitions()
+                )
+
+        );
+
+        System.out.println(usualCols);
+
+        String partitionsCols= String.join(", ",LoaderUtils.getColumnNameOnly(jobConf.getPartitions()));
+
+        Log.write(jobConf, "Write data to Hive Table");
+
+        String hiveScript = String.format(
+                "INSERT INTO %s.%s PARTITION(%s) SELECT %s,%s FROM tmp_table"
+                , databaseTo
+                ,tableTo
+                ,partitionsCols
+                ,usualCols
+                ,partitionsCols
+        );
+
+        Log.write(jobConf, hiveScript);
+
+        spark.sql(hiveScript);
+
+    }
+
+
+    /**
+     * Создание Hive таблицы из массива полей
+     *
+     * @param jConfig
+     * @param columnsArr
+     * @throws Exception
+     */
+    public static void createHiveTable(JobConfiguration jConfig, String[] columnsArr) throws Exception {
         SparkSession spark = Assets.getInstance().getSpark();
 
         String schema = jConfig.getDbConfiguration().getSchema();
@@ -41,126 +108,59 @@ public class HiveUtils {
             throw new Exception("There is not table name");
         }
 
-        Log.write(jConfig, "Creating database");
+        Log.write(jConfig, "Creating database: "+ schema);
 
         spark.sql(String.format("CREATE DATABASE IF NOT EXISTS %s LOCATION '/%s'",schema, schema));
 
-        Log.write(jConfig, "Creating table");
+        Log.write(jConfig, "Creating table: " +table);
+
+        Log.write(jConfig, "Delete old table if exist");
 
         spark.sql(String.format("DROP TABLE IF EXISTS %s.%s", schema, jConfig.getDbConfiguration().getTable()));
 
         HdfsUtils.deleteDirWithLog(jConfig, Assets.SEPARATOR +schema + Assets.SEPARATOR+ table);
 
 
-        String cols = String.join(", ", colsArr);
+        String cols = String.join(", ", LoaderUtils.getUsualColumns(columnsArr, jConfig.getPartitions()));
+
+        String partitions = String.join(",", jConfig.getPartitions());
 
         System.out.println(cols);
 
-        spark.sql(String.format("CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s \n" +
-                " (%s) \n" +
-                " STORED AS PARQUET \n" +
-                " LOCATION '/%s/%s' ",schema, table, cols, schema, table ));
-
-    }
-
-
-    public static void createHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
-        SparkSession spark = Assets.getInstance().getSpark();
-        String schema = jConfig.getDbConfiguration().getSchema();
-
-        if(schema == null){
-            throw new Exception("There is not schema name");
-        }
-
-        Log.write(jConfig, "Creating database and table");
-
-        spark.sql(String.format("DROP TABLE IF EXISTS %s.%s", schema, jConfig.getDbConfiguration().getTable()));
-
-        spark.sql(String.format("CREATE DATABASE IF NOT EXISTS %s LOCATION '/%s'",schema, schema));
-
-
-        String table = jConfig.getDbConfiguration().getTable();
-
-        if(table == null){
-            throw new Exception("There is not table name");
-        }
-        String partitions = String.join(", ", getPartitionStr(type, jConfig.getPartitions()));
-
-        String cols = String.join(", ", getUsualFieldsStr(type, jConfig.getPartitions()));
-
-        spark.sql(String.format("CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s \n" +
+        String hiveScript = String.format("CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s \n" +
                 " (%s) \n" +
                 " PARTITIONED BY (%s)\n" +
                 " STORED AS PARQUET \n" +
-                " LOCATION '/%s/%s' ",schema, table, cols, partitions, schema, table ));
+                " LOCATION '/%s/%s' ",schema, table, cols, partitions, schema, table );
+
+        Log.write(jConfig, hiveScript);
+
+        spark.sql(hiveScript);
 
     }
 
-    public static String[] getPartitionStr(StructType type, String[] partitions) {
+    /**
+     * Создание Hive таблицы из StructType
+     *
+     * @param jConfig
+     * @param type
+     * @throws Exception
+     */
+    public static void createHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
 
-        List<String> list = new ArrayList<>();
-        for (String partition : partitions) {
-            StructField field = type.apply(partition);
-            if(field == null){
-                throw new NullPointerException("There is not field for partition: "+ partition);
-            }
-            list.add(field.name().toLowerCase()+" "+convertSparkTypeToHiveTypeStr(field.dataType()));
-        }
+        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type).toArray(new String[0]));
 
-        return list.toArray(new String[0]);
     }
 
-    public static List<String> getFormattingCols(StructType type) {
-
-        List<String> list = new ArrayList<>();
-        for (StructField field : type.fields()) {
-                list.add(field.name().toLowerCase() + " " + convertSparkTypeToHiveTypeStr(field.dataType()));
-        }
-        return list;
+    /**
+     * Создание Hive таблицы из коллекции полей
+     *
+     * @param jConfig
+     * @param listColumns
+     * @throws Exception
+     */
+    public static void createHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
+        createHiveTable(jConfig, listColumns.toArray(new String[0]));
     }
-
-    private static String[] getUsualFieldsStr(StructType type, String[] partitions) {
-        List<String> list = new ArrayList<>();
-        for (StructField field : type.fields()) {
-            if(!LoaderUtils.isPartition(field.name(), partitions)){
-                list.add(field.name().toLowerCase()+" "+convertSparkTypeToHiveTypeStr(field.dataType()));
-            }
-        }
-        return list.toArray(new String[0]);
-    }
-
-
-    private static String convertSparkTypeToHiveTypeStr(DataType type){
-        if (BinaryType.equals(type)) {
-            return "binary";
-        } else if (BooleanType.equals(type)) {
-            return "boolean";
-        } else if (ByteType.equals(type)) {
-            return "tinyint";
-        } else if (CalendarIntervalType.equals(type)) {
-            return "interval";
-        } else if (DateType.equals(type)) {
-            return "date";
-        } else if (DoubleType.equals(type)) {
-            return "double";
-        } else if (FloatType.equals(type)) {
-            return "float";
-        } else if (IntegerType.equals(type)) {
-            return "int";
-        } else if (LongType.equals(type)) {
-            return "bigint";
-        } else if (NullType.equals(type)) {
-            return "null";
-        } else if (ShortType.equals(type)) {
-            return "smallint";
-        } else if (StringType.equals(type)) {
-            return "string";
-        } else if (TimestampType.equals(type)) {
-            return "timestamp";
-        }
-        return null;
-    }
-
-
 
 }

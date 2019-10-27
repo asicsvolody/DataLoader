@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Задание сгрузки данных из директории hdfs в таблицу hive c партиционированием по полям
  */
 
 package ru.yakimov.Jobs;
@@ -23,7 +25,7 @@ public class PartitionSparkDataJob extends Job {
     public Integer call() throws Exception {
         SparkSession spark = Assets.getInstance().getSpark();
 
-        if(jobConfig.getDirFrom().size()!= 1){
+        if(jobConfig.getDirFrom().length!= 1){
             Log.write(jobConfig, "Wrong dir from array size", Log.Level.ERROR);
             return 1;
         }
@@ -32,11 +34,11 @@ public class PartitionSparkDataJob extends Job {
 
         HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirTo());
 
-        Log.write(jobConfig, "Spark read data from dir "+ jobConfig.getDirFrom().get(0));
+        Log.write(jobConfig, "Spark read data from dir "+ jobConfig.getDirFrom()[0]);
 
         Dataset<Row> data= spark
                 .read()
-                .parquet(jobConfig.getDirFrom().get(0) + Assets.SEPARATOR + "*.parquet");
+                .parquet(jobConfig.getDirFrom()[0] + Assets.SEPARATOR + "*.parquet");
 
         Log.write(jobConfig, "Creating hive table");
 
@@ -46,9 +48,9 @@ public class PartitionSparkDataJob extends Job {
 
         data.show();
 
-        String partitions = String.join(",",jobConfig.getPartitions());
+        String partitions = String.join(",", LoaderUtils.getColumnNameOnly(jobConfig.getPartitions()));
 
-        String usualCols = String.join(",", LoaderUtils.getUsualCols(data.schema(), jobConfig.getPartitions()));
+        String usualCols = String.join(",", LoaderUtils.getUsualColumns(data.schema(), jobConfig.getPartitions()));
 
         Log.write(jobConfig, "Write data to Hive Table");
 

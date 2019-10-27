@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Статические методы работы с HADOOP FS
  */
 
 package ru.yakimov.utils;
@@ -20,6 +22,15 @@ import java.sql.SQLException;
 
 public class HdfsUtils {
 
+    /**
+     * Метод удаления директории с данными из HDFS
+     *
+     * @param path
+     * @return
+     * @throws XMLStreamException
+     * @throws IOException
+     * @throws SQLException
+     */
     public static synchronized boolean deleteFromHadoop(String path) throws XMLStreamException, IOException, SQLException {
         FileSystem fs = Assets.getInstance().getFs();
         Path file = new Path(path);
@@ -30,12 +41,30 @@ public class HdfsUtils {
         return false;
     }
 
+    /**
+     * Метод удаления директории с данными из HDFS с логированием
+     *
+     * @param config
+     * @param hdfsDir
+     * @throws SQLException
+     * @throws IOException
+     * @throws XMLStreamException
+     */
     public static synchronized void deleteDirWithLog(JobConfiguration config,  String hdfsDir) throws SQLException, IOException, XMLStreamException {
         if(deleteFromHadoop(hdfsDir)){
             Log.write(config, "Delete "+ hdfsDir );
         }
     }
 
+    /**
+     * Метод переноса файла из локальной FS в HDFS
+     * @param pathStr
+     * @param str
+     * @return
+     * @throws XMLStreamException
+     * @throws IOException
+     * @throws SQLException
+     */
     public static synchronized boolean writeToHdfs(String pathStr, String str) throws XMLStreamException, IOException, SQLException {
 
         FileSystem fs = Assets.getInstance().getFs();
@@ -52,6 +81,15 @@ public class HdfsUtils {
 
     }
 
+    /**
+     * Метод чтения данных из файла HDFS
+     *
+     * @param pathStr
+     * @return
+     * @throws XMLStreamException
+     * @throws IOException
+     * @throws SQLException
+     */
     public static synchronized String readFromHdfs(String pathStr) throws XMLStreamException, IOException, SQLException {
         FileSystem fs = Assets.getInstance().getFs();
         Path path = new Path(pathStr);
@@ -62,8 +100,6 @@ public class HdfsUtils {
             e.printStackTrace();
         }
         return res;
-
-
     }
 
 }

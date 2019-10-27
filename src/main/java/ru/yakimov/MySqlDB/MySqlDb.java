@@ -6,6 +6,7 @@
  * БД Mysql хранит информацию необходимссую для работы, логи
  * использует общее статическое подключение (singleton)
  */
+
 package ru.yakimov.MySqlDB;
 
 import ru.yakimov.config.DBConfiguration;
@@ -52,11 +53,10 @@ public class MySqlDb {
     }
 
     /**
-     * Получить connection (singleton)
+     * Метод подключени к базе Mysql
      * @return
-     * @throws Exception
+     * @throws SQLException
      */
-
     public static Connection getConnection() throws SQLException {
 
         if (conn == null || (conn != null && !isDbConnected())) {
@@ -79,16 +79,12 @@ public class MySqlDb {
         return conn;
     }
 
-
-
     /**
      * Получить результат выполнения запроса sql(первая запись первое поле)
-     *
      * @param sql
      * @return
      * @throws SQLException
      */
-
     public static String getSqlResult(String sql) throws SQLException {
         if (dbDebug) {
             System.err.println(sql);
@@ -109,7 +105,6 @@ public class MySqlDb {
      * @param sql
      * @throws SQLException
      */
-
     public static void execSQL(String sql) throws SQLException {
         if (dbDebug) {
             System.err.println(sql);
@@ -122,7 +117,6 @@ public class MySqlDb {
     /**
      * Получить результат выполнения запроса sql (коллекция из записей первой
      * колонки результата)
-     *
      * @param sql
      * @return
      * @throws SQLException
@@ -147,11 +141,9 @@ public class MySqlDb {
     /**
      * Инициализация соединения (singleton)
      *
-     *
      * @param config
-     *      конфигурация Mysql
      * @return
-     * @throws Exception
+     * @throws SQLException
      */
     public static Connection initConnection(DBConfiguration config) throws SQLException {
         return initConnection(config, false);
@@ -161,10 +153,9 @@ public class MySqlDb {
      * Инициализация соединения (singleton)
      *
      * @param config
-     *      конфигурация Mysql
      * @param debug
      * @return
-     * @throws Exception
+     * @throws SQLException
      */
     public static Connection initConnection(DBConfiguration config, Boolean debug) throws SQLException {
         dbUrl = String.format("jdbc:mysql://%s:%s/%s?serverTimezone=UTC&zeroDateTimeBehavior=CONVERT_TO_NULL",config.getHost(),config.getPort(),config.getSchema());
@@ -180,9 +171,7 @@ public class MySqlDb {
 
 
     /**
-     * Закрыть соединение (singleton)
-     *
-     * @throws SQLException
+     * Закрыть соединение
      */
     public static void closeConnection() {
         if (conn == null) {

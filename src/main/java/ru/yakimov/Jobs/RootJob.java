@@ -2,6 +2,9 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Корневая задача. Осуществляет запуск входящих в нее задач в соответствии с их порядком.
+ * Задачи одного Stage запускаются параленьно
  */
 
 package ru.yakimov.Jobs;
@@ -76,6 +79,13 @@ public class RootJob implements Callable<Integer> {
         return workRes;
     }
 
+    /**
+     * Метод создания сортированной Map коллекции по stage
+     *
+     * @param jobConfigs
+     * @return
+     * @throws ClassNotFoundException
+     */
     public Map<Integer, ArrayList<Job>> jobConfigsToTreeMap(List<JobConfiguration> jobConfigs) throws ClassNotFoundException {
         Map<Integer, ArrayList<Job>> resMap = new TreeMap<>();
         for (JobConfiguration jobConfig : jobConfigs) {

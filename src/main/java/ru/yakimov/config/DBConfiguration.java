@@ -2,6 +2,7 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ * Класс контейнер параметров базы данных
  */
 
 package ru.yakimov.config;

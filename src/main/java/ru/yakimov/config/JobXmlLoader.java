@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Класс осуществяющий сгрузку данных из *.jxml файла конфигурации в класс JobConfiguration
  */
 
 package ru.yakimov.config;
@@ -37,7 +39,11 @@ public class JobXmlLoader {
 
     private static final String DB_CONF = "dbConf";
 
-
+    /**
+     * Метод сгрузки данных из *.jxml файла
+     * @param file
+     * @return
+     */
     public static RootJobConfiguration readConfJob(File file){
         RootJobConfiguration resConfig = null;
         try{
@@ -63,8 +69,6 @@ public class JobXmlLoader {
                             jobConfig.setDbConfiguration(createDbConfig(startElementConf));
                         }
                     }
-
-
                 }
                 if(event.isEndElement()){
                     EndElement endElement = event.asEndElement();
@@ -89,6 +93,12 @@ public class JobXmlLoader {
         return resConfig;
     }
 
+    /**
+     * Метод создания и наполнения данными JobConfiguration
+     * @param rootJobName
+     * @param startElementConf
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private static JobConfiguration  createJobConfig(String rootJobName, StartElement startElementConf) {
         JobConfiguration jobConf = new JobConfiguration(rootJobName);
@@ -117,57 +127,65 @@ public class JobXmlLoader {
         return jobConf;
     }
 
-
+    /**
+     * Метод создания и наполнения данными DBConfiguration
+     * @param startElementConf
+     * @return
+     */
     public static DBConfiguration createDbConfig(StartElement startElementConf) {
-
         DBConfiguration dbConfig = new DBConfiguration();
-
         AppXmlLoader.setParamsTable(startElementConf, dbConfig);
-
         return dbConfig;
-
     }
 
+    /**
+     * Метод создания имени задания испотльзуя имя файла
+     * @param file
+     * @return
+     */
     private static String createJobNameFromPath(File file){
         String fileName = file.getName().split("\\.")[0];
         return createNameWithData(fileName);
     }
 
+    /**
+     * Метод получения
+     * @param ame
+     * @return
+     */
     public static String createNameWithData(String ame){
         String data = getFullTime();
         return ame+ "_" + data;
-
     }
 
-    public static String getDataNumbersOnly(String string){
-        StringBuilder sb = new StringBuilder();
-        for (char c : string.toCharArray()) {
-            if(c >= '0' && c<='9'){
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
-
+    /**
+     * Метод создания имени задания из используемого класса и даты и случайного числа
+     * @param classPath
+     * @return
+     */
     private static String createJobNameFromClass(String classPath){
         String[] jobClassArr = classPath.split("\\.");
         String className = jobClassArr[jobClassArr.length-1];
         String data = getFullTime();
-        return className + "_" + data + MathUtil.randomInt(0, 1000);
+        return className + "_" + data + MathUtil.randomInt(0, 100000);
     }
 
+    /**
+     * Метод возвращает время представленное только цыфрами
+     * @return
+     */
     private static String getFullTime(){
         return getDataNumbersOnly(LocalDateTime.now().toString());
     }
 
-
-
-
-
-
-
-
-
+    /**
+     * Метод возврящающий только числа из строки
+     * @param string
+     * @return
+     */
+    public static String getDataNumbersOnly(String string){
+        return string.replaceAll("[^0-9?!]", "");
+    }
 
 
 }

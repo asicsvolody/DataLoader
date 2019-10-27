@@ -2,78 +2,44 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Класс статических методов Spark
  */
 
 package ru.yakimov.utils;
 
-import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
 
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.StructType;
+import ru.yakimov.Assets;
+import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.config.JobConfiguration;
 import java.util.*;
 
 public class SparkUtils {
 
-    public static StructType getNewStructType(StructType dataType, StructType newDataType) {
+    /**
+     * Метод получения отформатированных под Hive types String представления полей
+     * @param dir
+     * @param jobConfig
+     * @return
+     * @throws Exception
+     */
+    public static List<String> getFormattingColsFromDir(String dir, JobConfiguration jobConfig) throws Exception {
 
-        Set<StructField> dataTypeFieldSet = new HashSet<>(Arrays.asList(dataType.fields()));
-        List<StructField> newDataList = Arrays.asList(newDataType.fields());
+        SparkSession spark = Assets.getInstance().getSpark();
 
-        if(dataTypeFieldSet.containsAll(newDataList))
-            return dataType;
+        Log.write(jobConfig, "Spark read schema from dir "+ dir);
+        StructType schema = spark
+                .read()
+                .parquet(dir + Assets.SEPARATOR + "*.parquet").schema();
 
-        dataTypeFieldSet.addAll(newDataList);
-        return new StructType(dataTypeFieldSet.toArray(new StructField[0]));
-    }
+        List<String> colsList = LoaderUtils.getFormattingCols(schema);
 
-    public static Column[] getUsingCols(Dataset<Row> dataOne, Dataset<Row>  dataTwo, StructType dataType) {
+        Log.write(jobConfig, "Checking portions fields");
 
-        List<Column> resCols = new ArrayList<>();
-        for (StructField field : dataType.fields()) {
-            if(dataOne.first().schema().contains(field)){
-                resCols.add(dataOne.col(field.name()));
-            }else{
-                resCols.add(dataTwo.col(field.name()));
-            }
-        }
-        return resCols.toArray(new Column[0]);
-    }
+        LoaderUtils.checkPartitions(colsList, jobConfig, dir);
 
-    public static String[] getArrayWithColsAndNull(String[] mainCols, List<String> newDataList){
-        getColumnNameOnly(mainCols);
-        newDataList= getListColumnNameOnly(newDataList);
-
-        for (int i = 0; i < mainCols.length ; i++) {
-            if (!newDataList.contains(mainCols[i]))
-                mainCols[i] = "null as "+ mainCols[i];
-        }
-        return mainCols;
-
-    }
-
-    private static String[] getColumnNameOnly(String[] colArr){
-        for (int i = 0; i <colArr.length ; i++) {
-            colArr[i] = colArr[i].split(" ")[0];
-        }
-        return colArr;
-    }
-    private static List<String> getListColumnNameOnly(List<String> colList){
-        List<String> res = new ArrayList<>();
-        for (String str : colList) {
-            res.add(str.split(" ")[0]);
-        }
-        return res;
-    }
-
-
-
-    public static List<Column> getPrimaryColumns(Dataset<Row> data, ArrayList<String> primaryKeys) {
-        List<Column> resList = new ArrayList<>();
-        for (String primaryKey : primaryKeys) {
-            resList.add(data.col(primaryKey));
-        }
-        return resList;
+        return colsList;
     }
 }

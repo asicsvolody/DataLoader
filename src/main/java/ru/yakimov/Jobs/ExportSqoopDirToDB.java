@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Метод экспорта sqoop-ом данных в таблицу базы данных
  */
 
 package ru.yakimov.Jobs;
@@ -18,7 +20,7 @@ public class ExportSqoopDirToDB extends Job {
     public Integer call() throws Exception {
         Log.write(jobConfig, "Sqoop get task Export");
 
-        if(jobConfig.getDirFrom().size() !=1){
+        if(jobConfig.getDirFrom().length !=1){
             Log.write(jobConfig, "Wrong dir from array size", Log.Level.ERROR);
             return 1;
         }
@@ -55,7 +57,7 @@ public class ExportSqoopDirToDB extends Job {
 
         if(process.exitValue() == 0){
             Log.write(jobConfig, "Delete dir from");
-            HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirFrom().get(0));
+            HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirFrom()[0]);
         }
 
         Log.write(jobConfig, "Delete password: " + SqoopUtils.getHadoopPasswordPath(jobConfig.getJobName() ));

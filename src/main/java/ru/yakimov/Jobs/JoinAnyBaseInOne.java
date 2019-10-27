@@ -2,14 +2,17 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Класс сгрузки данных из нескольких директорий в одну автоматически сгенерированную таблицу Hive
+ * Если в сгружаемой таблице нет поля партицирования генерируется Exception
+ * Остальные недостающие поля заполняются Null
+ * После успешного выполнения директории "from" удаляются
  */
 
 package ru.yakimov.Jobs;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
+
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.StructType;
 import ru.yakimov.Assets;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.utils.HdfsUtils;
@@ -33,13 +36,12 @@ public class JoinAnyBaseInOne extends Job {
         Set<String> fullColsSet = new HashSet<>();
 
         for (String dir : jobConfig.getDirFrom()) {
-            Log.write(jobConfig, "Spark read schema from dir "+ dir);
-            StructType schema = spark
-                    .read()
-                    .parquet(dir + Assets.SEPARATOR + "*.parquet").schema();
+
+            List<String> colsList = SparkUtils.getFormattingColsFromDir(dir, jobConfig);
+
             Log.write(jobConfig, "Add columns to  colsSet");
 
-            fullColsSet.addAll(HiveUtils.getFormattingCols(schema));
+            fullColsSet.addAll(colsList);
         }
 
         Log.write(jobConfig, "Creating hive table");
@@ -53,50 +55,17 @@ public class JoinAnyBaseInOne extends Job {
 
 
         for (String dir : jobConfig.getDirFrom()) {
-            Log.write(jobConfig, "Spark read data from dir "+ dir);
-            Dataset<Row> data = spark.read()
-                    .parquet(dir + Assets.SEPARATOR + "*.parquet");
 
-            data.createOrReplaceTempView("tmp_table");
-
-            data.show();
-
-
-            String cols = String.join(","
-                    , SparkUtils
-                            .getArrayWithColsAndNull(
-                                    fullColsSet.toArray(new String[0])
-                                    , HiveUtils.getFormattingCols(data.schema())
-                            )
-            );
-
-
-
-            Log.write(jobConfig, "Write data to Hive Table");
-
-            System.out.println(String.format(
-                    "INSERT INTO %s.%s SELECT %s FROM tmp_table"
-                    , jobConfig.getDbConfiguration().getSchema()
-                    ,jobConfig.getDbConfiguration().getTable()
-                    ,cols
-            ));
-
-            spark.sql(String.format(
-                    "INSERT INTO %s.%s SELECT %s FROM tmp_table"
-                    , jobConfig.getDbConfiguration().getSchema()
-                    ,jobConfig.getDbConfiguration().getTable()
-                    ,cols
-            ));
-
-            spark.sql(String.format("SELECT * FROM %s.%s",jobConfig.getDbConfiguration().getSchema(),jobConfig.getDbConfiguration().getTable()))
-                    .sort("user_id")
-                    .show();
+            HiveUtils.insetToHiveTable(jobConfig, dir);
 
         }
 
-        spark.sql(String.format("SELECT * FROM %s.%s",jobConfig.getDbConfiguration().getSchema(),jobConfig.getDbConfiguration().getTable()))
-                .sort("user_id")
-                .show();
+        Log.write(jobConfig, "Delete dirs from");
+
+        for (String dir : jobConfig.getDirFrom()) {
+            HdfsUtils.deleteDirWithLog(jobConfig, dir);
+        }
+
         return 0;
     }
 }

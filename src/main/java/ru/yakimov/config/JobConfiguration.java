@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Класс контейнер для хранения конфингурации задания
  */
 
 package ru.yakimov.config;
@@ -40,8 +42,8 @@ public class JobConfiguration{
         return stage;
     }
 
-    public List<String> getDirFrom() {
-        return dirFrom;
+    public String[] getDirFrom() {
+        return dirFrom.toArray(new String[0]);
     }
 
     public String getDirTo() {

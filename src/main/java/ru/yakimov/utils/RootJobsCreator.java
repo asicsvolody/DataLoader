@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Класс статических методов создания корневых задач
  */
 
 package ru.yakimov.utils;
@@ -18,6 +20,13 @@ import java.util.ArrayList;
 
 public class RootJobsCreator {
 
+    /**
+     * Метод создания массива корневых задач из директории
+     *
+     * @param jobsDir
+     * @return
+     * @throws SQLException
+     */
     public  static RootJob[] getRootJobsFromDir(String jobsDir) throws SQLException {
 
         ArrayList <RootJob> resRootJobs = new ArrayList<>();
@@ -42,6 +51,13 @@ public class RootJobsCreator {
         return resRootJobs.toArray(new RootJob[0]);
     }
 
+    /**
+     * Метод создания корневой задачи из файла
+     *
+     * @param file
+     * @return
+     * @throws SQLException
+     */
     private static RootJob getRootJobsFromFile(File file) throws SQLException {
         RootJob rootJob = null;
 
@@ -61,5 +77,4 @@ public class RootJobsCreator {
 
         return rootJob;
     }
-
 }

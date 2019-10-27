@@ -2,6 +2,8 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ *
+ * Сласс статических методов sqoop
  */
 
 package ru.yakimov.utils;
@@ -21,6 +23,15 @@ public class SqoopUtils {
     private final static String PASSWORD_FILE_PATH_DIR = "./";
     private final static Path PASSWORD_HADOOP_PATH_DIR = new Path("/user/password");
 
+
+    /**
+     * Метод создания файла пароля для базы данных в локальной диерктории и копирования его в hadoop
+     * @param password
+     * @param config
+     * @throws XMLStreamException
+     * @throws IOException
+     * @throws SQLException
+     */
     public static void createPassword(String password, JobConfiguration config) throws XMLStreamException, IOException, SQLException {
 
         File passwordFile = new File(PASSWORD_FILE_PATH_DIR+ Assets.SEPARATOR+getPasswordFileName(config.getJobName()));
@@ -62,6 +73,11 @@ public class SqoopUtils {
         passwordFile.deleteOnExit();
     }
 
+    /**
+     * Запись потока сообщения проццеса в логи
+     * @param process
+     * @param config
+     */
     public static void writeProcessMessageStream(Process process, JobConfiguration config){
         String line;
         try {
@@ -78,16 +94,31 @@ public class SqoopUtils {
         }
     }
 
-
-
+    /**
+     * Метод создания имени файла пароля
+     * @param jobIdentifier
+     * @return
+     */
     private static String getPasswordFileName(String jobIdentifier){
         return jobIdentifier+".password";
     }
 
+    /**
+     * Метод создания path файла пароля в HDFS
+     *
+     * @param jobIdentifier
+     * @return
+     */
     public static String getHadoopPasswordPath(String jobIdentifier){
         return PASSWORD_HADOOP_PATH_DIR+Assets.SEPARATOR+getPasswordFileName(jobIdentifier);
     }
 
+    /**
+     * Метод логирования результата выполнения Sqoop
+     * @param jobConfig
+     * @param prosExitValue
+     * @throws SQLException
+     */
     public static void writeResSqoop(JobConfiguration jobConfig, int prosExitValue) throws SQLException {
         if (prosExitValue == 0) {
             Log.write(jobConfig, "Sqoop successfully");

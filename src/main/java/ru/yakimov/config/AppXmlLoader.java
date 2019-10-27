@@ -2,6 +2,7 @@
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
  * E-mail: yakimovvn@bk.ru
+ * Класс осуществяющий сгрузку данных из *.xml файла конфигурации в класс AppConfiguration
  */
 
 package ru.yakimov.config;
@@ -38,6 +39,15 @@ public class AppXmlLoader {
     private static final String TABLE = "table";
     private static final String PRIMARY_KEY = "primaryKey";
 
+
+    /**
+     * Метод сгрузки данных из конфигурационного файла
+     *
+     * @param configFile
+     * @return
+     * @throws FileNotFoundException
+     * @throws XMLStreamException
+     */
     public static AppConfiguration readConfigApp(String configFile) throws FileNotFoundException, XMLStreamException {
         AppConfiguration resConfig = null;
         try {
@@ -153,6 +163,11 @@ public class AppXmlLoader {
         return resConfig;
     }
 
+    /**
+     * Отдельный метод создания и наполнения данными DBConfiguration при стении конфигурациорнного файла
+     * @param startElementConf
+     * @param dbConfig
+     */
     public static void setParamsTable(StartElement startElementConf, DBConfiguration dbConfig) {
         Iterator<Attribute> attributes = startElementConf.getAttributes();
         while (attributes.hasNext()) {
