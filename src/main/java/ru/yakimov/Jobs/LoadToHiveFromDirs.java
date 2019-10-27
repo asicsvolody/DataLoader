@@ -21,7 +21,7 @@ import ru.yakimov.utils.SparkUtils;
 
 import java.util.*;
 
-public class JoinAnyBaseInOne extends Job {
+public class LoadToHiveFromDirs extends Job {
     @Override
     public Integer call() throws Exception {
 
