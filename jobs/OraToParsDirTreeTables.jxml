@@ -19,7 +19,7 @@
                     schema="usersDB" table="usersBigData" primaryKey="user_id"/>
 
         </job>
-        <job jobClass="ru.yakimov.Jobs.JoinAnyBaseInOne" jobDirFrom="/tmp/usersDB/users, /tmp/usersDB/usersBigDataTwo, /tmp/usersDB/usersBigData" jobDirTo="/data"  partition="user_age int" stage="2">
+        <job jobClass="ru.yakimov.Jobs.LoadToHiveFromDirs" jobDirFrom="/tmp/usersDB/users, /tmp/usersDB/usersBigDataTwo, /tmp/usersDB/usersBigData" jobDirTo="/data" partition="user_age int" stage="2">
             <dbConf  user="vladimir" password="bhbyf.hnftdf"
                        schema="jointSchema" table="jointTable" primaryKey="user_id"/>
 

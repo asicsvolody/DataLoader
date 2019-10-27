@@ -93,7 +93,7 @@ public class HiveUtils {
      * @param columnsArr
      * @throws Exception
      */
-    public static void createHiveTable(JobConfiguration jConfig, String[] columnsArr) throws Exception {
+    public static synchronized void createHiveTable(JobConfiguration jConfig, String[] columnsArr) throws Exception {
         SparkSession spark = Assets.getInstance().getSpark();
 
         String schema = jConfig.getDbConfiguration().getSchema();
@@ -146,7 +146,7 @@ public class HiveUtils {
      * @param type
      * @throws Exception
      */
-    public static void createHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
+    public static synchronized void createHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
 
         createHiveTable(jConfig, LoaderUtils.getFormattingCols(type).toArray(new String[0]));
 
@@ -159,7 +159,7 @@ public class HiveUtils {
      * @param listColumns
      * @throws Exception
      */
-    public static void createHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
+    public static synchronized void createHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
         createHiveTable(jConfig, listColumns.toArray(new String[0]));
     }
 

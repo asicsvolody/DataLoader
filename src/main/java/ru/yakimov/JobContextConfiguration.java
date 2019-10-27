@@ -12,17 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import ru.yakimov.Jobs.ImportSqoopDbToDirJob;
-import ru.yakimov.Jobs.JoinAnyBaseInOne;
-import ru.yakimov.Jobs.PartitionSparkDataJob;
+import ru.yakimov.Jobs.LoadToHiveFromDirs;
 
 @Configuration
 public class JobContextConfiguration {
-
-    @Bean
-    @Scope("prototype")
-    public PartitionSparkDataJob loadSparkPartitionTableJob(){
-        return new PartitionSparkDataJob();
-    }
 
     @Bean
     @Scope("prototype")
@@ -32,8 +25,8 @@ public class JobContextConfiguration {
 
     @Bean
     @Scope("prototype")
-    public JoinAnyBaseInOne loadJoinAnyBaseInOne(){
-        return new JoinAnyBaseInOne();
+    public LoadToHiveFromDirs loadJoinAnyBaseInOne(){
+        return new LoadToHiveFromDirs();
     }
 
 

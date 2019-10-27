@@ -7,7 +7,9 @@
                        schema="usersDB" table="users" primaryKey="user_id"/>
 
         </job>
-        <job jobClass="ru.yakimov.Jobs.PartitionSparkDataJob" jobDirFrom="/tmp/data" jobDirTo="/data" partition="user_age" stage="2">
+
+
+        <job jobClass="ru.yakimov.Jobs.LoadToHiveFromDirs" jobDirFrom="/tmp/data" jobDirTo="/data" partition="user_age int" stage="2">
             <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
                        schema="usersDB" table="users" primaryKey="user_id"/>
 
