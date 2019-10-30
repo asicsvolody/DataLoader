@@ -17,6 +17,9 @@ import ru.yakimov.Assets;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.config.JobConfiguration;
 
+import javax.xml.stream.XMLStreamException;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
@@ -127,11 +130,13 @@ public class HiveUtils {
 
         System.out.println(cols);
 
-        String hiveScript = String.format("CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s \n" +
+        String hiveScript = String.format("CREATE TABLE IF NOT EXISTS %s.%s \n" +
                 " (%s) \n" +
                 " PARTITIONED BY (%s)\n" +
-                " STORED AS PARQUET \n" +
-                " LOCATION '/%s/%s' ",schema, table, cols, partitions, schema, table );
+                " STORED AS ORC \n" +
+                " LOCATION '/%s/%s' " +
+                "TBLPROPERTIES ('transactional'='true')"
+                ,schema, table, cols, partitions, schema, table );
 
         Log.write(jConfig, hiveScript);
 
@@ -161,6 +166,12 @@ public class HiveUtils {
      */
     public static synchronized void createHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
         createHiveTable(jConfig, listColumns.toArray(new String[0]));
+    }
+
+    public static synchronized void deleteFronHiveTable(String schemaFrom, String tableFrom, String tmpSchema, String  tmpTable) throws XMLStreamException, IOException, SQLException {
+        SparkSession spark = Assets.getInstance().getSpark();
+        spark.sql(String.format("DELETE FROM TABLE %s.%s where "));
+
     }
 
 }
