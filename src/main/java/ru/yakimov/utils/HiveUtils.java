@@ -177,7 +177,14 @@ public class HiveUtils {
 
 
         Log.write(jConf, "Spark read new data from table");
-        Dataset<Row> data = spark.read().parquet(dir+Assets.SEPARATOR+ "*.parquet");
+
+
+//        Dataset<Row> data = spark.read().parquet(dir+Assets.SEPARATOR+ "*.parquet");
+        String sparkScript = String.format("SELECT * FROM parquet.`%s/*.parquet`",dir);
+
+        Log.write(jConf, sparkScript);
+
+        Dataset<Row> data = spark.sql(sparkScript);
 
         if(!LoaderUtils.schemaContainsAll(data.schema(), jConf.getDbConfiguration().getPrimaryKeys())){
             Log.writeExceptionAndGet(jConf, "Primary keys from main table not exist");
@@ -199,8 +206,8 @@ public class HiveUtils {
                 ,jConf.getDbConfiguration().getSchema()
                 ,jConf.getDbConfiguration().getTable()));
 
-//        spark.sql("SELECT * FROM jointSchema.jointTable WHERE user_id NOT IN (SELECT user_id FROM tmp_table where user_id IS NOT NULL)").show();
-        spark.sql(hiveScript);
+        spark.sql("SELECT * FROM jointSchema.jointTable WHERE user_id NOT IN (SELECT user_id FROM tmp_table where user_id IS NOT NULL)").show();
+//        spark.sql(hiveScript);
 
     }
 
