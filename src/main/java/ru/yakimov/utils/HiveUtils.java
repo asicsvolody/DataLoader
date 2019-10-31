@@ -74,7 +74,7 @@ public class HiveUtils {
 
         );
 
-        System.out.println(usualCols);
+        Log.write(jobConf, usualCols);
 
         String partitionsCols= String.join(", ",LoaderUtils.getColumnNameOnly(jobConf.getPartitions()));
 
@@ -92,9 +92,7 @@ public class HiveUtils {
         Log.write(jobConf, hiveScript);
 
         spark.sql(hiveScript);
-
     }
-
 
     /**
      * Создание Hive таблицы из массива полей
@@ -175,11 +173,8 @@ public class HiveUtils {
         String schema = jConf.getDbConfiguration().getSchema();
         String table = jConf.getDbConfiguration().getTable();
 
-
         Log.write(jConf, "Spark read new data from table");
 
-
-//        Dataset<Row> data = spark.read().parquet(dir+Assets.SEPARATOR+ "*.parquet");
         String sparkScript = String.format("SELECT * FROM parquet.`%s/*.parquet`",dir);
 
         Log.write(jConf, sparkScript);
@@ -193,12 +188,14 @@ public class HiveUtils {
 
         data.createOrReplaceTempView("tmp_table");
 
-        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s SELECT * FROM %s.%s WHERE %s"
+        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s SELECT t.* FROM %s.%s t LEFT JOIN tmp_table ON %s WHERE %s"
                 ,schema
                 ,table
                 ,schema
                 ,table
-                , getSelectPrimary(jConf.getDbConfiguration().getPrimaryKeys()));
+                , getSelectPrimary(jConf.getDbConfiguration().getPrimaryKeys())
+                ,getPrimaryIsNull(jConf.getDbConfiguration().getPrimaryKeys())
+        );
 
         Log.write(jConf, hiveScript);
 
@@ -206,15 +203,23 @@ public class HiveUtils {
                 ,jConf.getDbConfiguration().getSchema()
                 ,jConf.getDbConfiguration().getTable()));
 
-        spark.sql("SELECT * FROM jointSchema.jointTable WHERE user_id NOT IN (SELECT user_id FROM tmp_table where user_id IS NOT NULL)").show();
-//        spark.sql(hiveScript);
+//        spark.sql("SELECT t.* FROM jointSchema.jointTable t LEFT JOIN tmp_table ON t.user_id=tmp_table.user_id AND t.user_age=tmp_table.user_age WHERE tmp_table.user_id IS NULL AND tmp_table.user_age IS NULL").sort("t.user_id").show();
+        spark.sql(hiveScript);
 
     }
 
     private static String getSelectPrimary(List<String> primaryKeys) {
         List<String> lines = new ArrayList<>();
         for (String primaryKey : primaryKeys) {
-            lines.add(String.format("%s NOT IN (SELECT %s FROM tmp_table WHERE %s IS NOT NULL)", primaryKey, primaryKey, primaryKey));
+            lines.add(String.format("t.%s=tmp_table.%s", primaryKey, primaryKey));
+        }
+        return String.join(" AND ",lines.toArray(new String[0]));
+    }
+
+    private static String getPrimaryIsNull(List<String> primaryKeys){
+        List<String> lines = new ArrayList<>();
+        for (String primaryKey : primaryKeys) {
+            lines.add(String.format("tmp_table.%s IS NULL", primaryKey));
         }
         return String.join(" AND ",lines.toArray(new String[0]));
     }
