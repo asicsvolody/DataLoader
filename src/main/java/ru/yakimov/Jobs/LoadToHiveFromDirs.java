@@ -17,6 +17,7 @@ import ru.yakimov.Assets;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.utils.HdfsUtils;
 import ru.yakimov.utils.HiveUtils;
+import ru.yakimov.utils.LoaderUtils;
 import ru.yakimov.utils.SparkUtils;
 
 import java.util.*;
@@ -35,7 +36,7 @@ public class LoadToHiveFromDirs extends Job {
 
         Set<String> fullColsSet = new HashSet<>();
 
-        for (String dir : jobConfig.getDirFrom()) {
+        for (String dir : jobConfig.getDirsFrom()) {
 
             List<String> colsList = SparkUtils.getFormattingColsFromDir(dir, jobConfig);
 
@@ -46,7 +47,7 @@ public class LoadToHiveFromDirs extends Job {
 
         Log.write(jobConfig, "Creating hive table");
 
-        HiveUtils.createHiveTable(jobConfig, fullColsSet.toArray(new String[0]));
+        HiveUtils.createTransactionalHiveTable(jobConfig, fullColsSet);
 
         Log.write(jobConfig, "Dynamic insert into hiveTable");
 
@@ -54,7 +55,7 @@ public class LoadToHiveFromDirs extends Job {
 
 
 
-        for (String dir : jobConfig.getDirFrom()) {
+        for (String dir : jobConfig.getDirsFrom()) {
 
             HiveUtils.insetToHiveTable(jobConfig, dir);
 
@@ -62,9 +63,8 @@ public class LoadToHiveFromDirs extends Job {
 
         Log.write(jobConfig, "Delete dirs from");
 
-        for (String dir : jobConfig.getDirFrom()) {
-            HdfsUtils.deleteDirWithLog(jobConfig, dir);
-        }
+        LoaderUtils.deleteDirs(jobConfig, jobConfig.getDirsFrom());
+
 
         return 0;
     }

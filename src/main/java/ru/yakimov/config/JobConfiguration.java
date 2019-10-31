@@ -42,7 +42,7 @@ public class JobConfiguration{
         return stage;
     }
 
-    public String[] getDirFrom() {
+    public String[] getDirsFrom() {
         return dirFrom.toArray(new String[0]);
     }
 

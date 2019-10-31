@@ -12,6 +12,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
+import org.apache.spark.sql.hive.HiveContext;
 import org.apache.spark.sql.types.StructType;
 import ru.yakimov.Assets;
 import ru.yakimov.MySqlDB.Log;
@@ -20,11 +21,17 @@ import ru.yakimov.config.JobConfiguration;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 
 public class HiveUtils {
+
+    private enum TableType{
+        EXTERNAL, TRANSACTIONAL
+    }
 
     /**
      * Динамический insert в таблицу hive c автоматическим заполнением недостающий полей значениями null
@@ -96,7 +103,7 @@ public class HiveUtils {
      * @param columnsArr
      * @throws Exception
      */
-    public static synchronized void createHiveTable(JobConfiguration jConfig, String[] columnsArr) throws Exception {
+    public static synchronized void createHiveTable(JobConfiguration jConfig, String[] columnsArr, TableType type) throws Exception {
         SparkSession spark = Assets.getInstance().getSpark();
 
         String schema = jConfig.getDbConfiguration().getSchema();
@@ -130,12 +137,7 @@ public class HiveUtils {
 
         System.out.println(cols);
 
-        String hiveScript = String.format("CREATE TABLE IF NOT EXISTS %s.%s \n" +
-                " (%s) \n" +
-                " PARTITIONED BY (%s)\n" +
-                " STORED AS ORC \n" +
-                " LOCATION '/%s/%s' " +
-                "TBLPROPERTIES ('transactional'='true')"
+        String hiveScript = String.format( getCreateScript(type)
                 ,schema, table, cols, partitions, schema, table );
 
         Log.write(jConfig, hiveScript);
@@ -144,34 +146,90 @@ public class HiveUtils {
 
     }
 
-    /**
-     * Создание Hive таблицы из StructType
-     *
-     * @param jConfig
-     * @param type
-     * @throws Exception
-     */
-    public static synchronized void createHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
 
-        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type).toArray(new String[0]));
+    public static synchronized void createTransactionalHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
+
+        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type).toArray(new String[0]), TableType.TRANSACTIONAL);
 
     }
 
-    /**
-     * Создание Hive таблицы из коллекции полей
-     *
-     * @param jConfig
-     * @param listColumns
-     * @throws Exception
-     */
-    public static synchronized void createHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
-        createHiveTable(jConfig, listColumns.toArray(new String[0]));
+
+    public static synchronized void createTransactionalHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
+        createHiveTable(jConfig, listColumns.toArray(new String[0]), TableType.TRANSACTIONAL);
     }
 
-    public static synchronized void deleteFronHiveTable(String schemaFrom, String tableFrom, String tmpSchema, String  tmpTable) throws XMLStreamException, IOException, SQLException {
+
+    public static synchronized void createExternalHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
+
+        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type).toArray(new String[0]), TableType.EXTERNAL);
+
+    }
+
+    public static synchronized void createExternalHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
+        createHiveTable(jConfig, listColumns.toArray(new String[0]), TableType.EXTERNAL);
+    }
+
+    public static synchronized void deleteFromHiveTable(JobConfiguration jConf, String dir) throws Exception {
         SparkSession spark = Assets.getInstance().getSpark();
-        spark.sql(String.format("DELETE FROM TABLE %s.%s where "));
 
+        String schema = jConf.getDbConfiguration().getSchema();
+        String table = jConf.getDbConfiguration().getTable();
+
+
+        Log.write(jConf, "Spark read new data from table");
+        Dataset<Row> data = spark.read().parquet(dir+Assets.SEPARATOR+ "*.parquet");
+
+        if(!LoaderUtils.schemaContainsAll(data.schema(), jConf.getDbConfiguration().getPrimaryKeys())){
+            Log.writeExceptionAndGet(jConf, "Primary keys from main table not exist");
+        }
+        data.show();
+
+        data.createOrReplaceTempView("tmp_table");
+
+        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s SELECT * FROM %s.%s WHERE %s"
+                ,schema
+                ,table
+                ,schema
+                ,table
+                , getSelectPrimary(jConf.getDbConfiguration().getPrimaryKeys()));
+
+        Log.write(jConf, hiveScript);
+
+        Log.write(jConf, String.format("Spark delete data from table %s.%s"
+                ,jConf.getDbConfiguration().getSchema()
+                ,jConf.getDbConfiguration().getTable()));
+
+//        spark.sql("SELECT * FROM jointSchema.jointTable WHERE user_id NOT IN (SELECT user_id FROM tmp_table where user_id IS NOT NULL)").show();
+        spark.sql(hiveScript);
+
+    }
+
+    private static String getSelectPrimary(List<String> primaryKeys) {
+        List<String> lines = new ArrayList<>();
+        for (String primaryKey : primaryKeys) {
+            lines.add(String.format("%s NOT IN (SELECT %s FROM tmp_table WHERE %s IS NOT NULL)", primaryKey, primaryKey, primaryKey));
+        }
+        return String.join(" AND ",lines.toArray(new String[0]));
+    }
+
+    private static String getCreateScript(TableType type){
+        switch (type){
+            case EXTERNAL:
+                return "CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s \n" +
+                     " (%s) \n" +
+                    " PARTITIONED BY (%s)\n" +
+                    " STORED AS PARQUET \n" +
+                    " LOCATION '/%s/%s' ";
+
+            case TRANSACTIONAL:
+                return "CREATE TABLE IF NOT EXISTS %s.%s \n" +
+                         " (%s) \n" +
+                        " PARTITIONED BY (%s)\n" +
+                        " STORED AS ORC \n" +
+                        " LOCATION '/%s/%s' " +
+                        "TBLPROPERTIES ('transactional'='true')";
+        }
+        return null;
     }
 
 }

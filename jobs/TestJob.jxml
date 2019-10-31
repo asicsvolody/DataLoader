@@ -1,0 +1,41 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<config>
+    <rootJob>
+
+        <job jobClass="ru.yakimov.Jobs.ImportSqoopDbToDirJob" jobDirTo="/tmp/usersDB/users" partition="user_age" stage="1">
+
+            <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
+                    schema="usersDB" table="users" primaryKey="user_id"/>
+
+        </job>
+        <job jobClass="ru.yakimov.Jobs.ImportSqoopDbToDirJob" jobDirTo="/tmp/usersDB/usersBigDataTwo" partition="user_age" stage="1">
+
+            <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
+                    schema="usersDB" table="usersBigDataTwo" primaryKey="user_id"/>
+
+        </job>
+        <job jobClass="ru.yakimov.Jobs.ImportSqoopDbToDirJob" jobDirTo="/tmp/usersDB/usersBigData" partition="user_age" stage="1">
+
+            <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
+                    schema="usersDB" table="usersBigData" primaryKey="user_id"/>
+
+        </job>
+        <job jobClass="ru.yakimov.Jobs.LoadToHiveFromDirs" jobDirFrom="/tmp/usersDB/users, /tmp/usersDB/usersBigDataTwo, /tmp/usersDB/usersBigData" jobDirTo="/data" partition="user_age int" stage="2">
+            <dbConf  user="vladimir" password="bhbyf.hnftdf"
+                     schema="jointSchema" table="jointTable" primaryKey="user_id"/>
+
+        </job>
+        <job jobClass="ru.yakimov.Jobs.ImportSqoopDbToDirJob" jobDirTo="/tmp/usersDB/users1" partition="user_age" stage="3">
+
+            <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
+                    schema="usersDB" table="users1" primaryKey="user_id"/>
+
+        </job>
+        <job jobClass="ru.yakimov.Jobs.DeleteFromTableJob" jobDirFrom="/tmp/usersDB/users1" jobDirTo="/data" partition="user_age int" stage="4">
+            <dbConf  user="vladimir" password="bhbyf.hnftdf"
+                     schema="jointSchema" table="jointTable" primaryKey="user_id"/>
+
+        </job>
+
+    </rootJob>
+</config>

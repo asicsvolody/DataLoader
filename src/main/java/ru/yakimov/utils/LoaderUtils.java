@@ -17,6 +17,9 @@ import org.apache.spark.sql.types.StructType;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.config.JobConfiguration;
 
+import javax.xml.stream.XMLStreamException;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 
 import static org.apache.spark.sql.types.DataTypes.*;
@@ -175,4 +178,19 @@ public class LoaderUtils {
         return colArr;
     }
 
+    public static boolean schemaContainsAll(StructType schema, ArrayList<String> primaryKeys) {
+        List<String> dataColumns = Arrays.asList(schema.fieldNames());
+        for (String primaryKey : primaryKeys) {
+            if(!dataColumns.contains(primaryKey))
+                return false;
+
+        }
+        return true;
+    }
+
+    public static void  deleteDirs(JobConfiguration jConf, String[] dirs) throws SQLException, IOException, XMLStreamException {
+        for (String dir : dirs) {
+            HdfsUtils.deleteDirWithLog(jConf, dir);
+        }
+    }
 }

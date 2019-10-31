@@ -1,0 +1,19 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<config>
+    <rootJob>
+
+
+        <job jobClass="ru.yakimov.Jobs.ImportSqoopDbToDirJob" jobDirTo="/tmp/usersDB/users" partition="user_age" stage="1">
+
+            <dbConf host="127.0.0.1" port="3306" user="vladimir" password="bhbyf.hnftdf"
+                    schema="usersDB" table="users" primaryKey="user_id"/>
+
+        </job>
+        <job jobClass="ru.yakimov.Jobs.DeleteFromTableJob" jobDirFrom="/tmp/usersDB/users" jobDirTo="/data" partition="user_age int" stage="2">
+            <dbConf  user="vladimir" password="bhbyf.hnftdf"
+                     schema="jointSchema" table="jointTable" primaryKey="user_id"/>
+
+        </job>
+
+    </rootJob>
+</config>

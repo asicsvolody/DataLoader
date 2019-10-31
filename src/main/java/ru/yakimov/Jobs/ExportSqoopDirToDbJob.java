@@ -8,19 +8,22 @@
 
 package ru.yakimov.Jobs;
 
+import org.springframework.stereotype.Component;
 import ru.yakimov.Assets;
 import ru.yakimov.config.DBConfiguration;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.utils.HdfsUtils;
 import ru.yakimov.utils.SqoopUtils;
 
-public class ExportSqoopDirToDB extends Job {
+
+@Component
+public class ExportSqoopDirToDbJob extends Job {
 
     @Override
     public Integer call() throws Exception {
         Log.write(jobConfig, "Sqoop get task Export");
 
-        if(jobConfig.getDirFrom().length !=1){
+        if(jobConfig.getDirsFrom().length !=1){
             Log.write(jobConfig, "Wrong dir from array size", Log.Level.ERROR);
             return 1;
         }
@@ -57,7 +60,7 @@ public class ExportSqoopDirToDB extends Job {
 
         if(process.exitValue() == 0){
             Log.write(jobConfig, "Delete dir from");
-            HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirFrom()[0]);
+            HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirsFrom()[0]);
         }
 
         Log.write(jobConfig, "Delete password: " + SqoopUtils.getHadoopPasswordPath(jobConfig.getJobName() ));
