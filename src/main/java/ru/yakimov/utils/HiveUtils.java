@@ -173,6 +173,9 @@ public class HiveUtils {
         String schema = jConf.getDbConfiguration().getSchema();
         String table = jConf.getDbConfiguration().getTable();
 
+        String partitionsCols= String.join(", ",LoaderUtils.getColumnNameOnly(jConf.getPartitions()));
+
+
         Log.write(jConf, "Spark read new data from table");
 
         String sparkScript = String.format("SELECT * FROM parquet.`%s/*.parquet`",dir);
@@ -188,9 +191,10 @@ public class HiveUtils {
 
         data.createOrReplaceTempView("tmp_table");
 
-        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s SELECT t.* FROM %s.%s t LEFT JOIN tmp_table ON %s WHERE %s"
+        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s PARTITION(%s) SELECT t.* FROM %s.%s t LEFT JOIN tmp_table ON %s WHERE %s"
                 ,schema
                 ,table
+                ,partitionsCols
                 ,schema
                 ,table
                 , getSelectPrimary(jConf.getDbConfiguration().getPrimaryKeys())
