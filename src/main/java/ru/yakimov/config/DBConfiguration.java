@@ -80,7 +80,7 @@ public class DBConfiguration {
 
 
     public ArrayList<String> getPrimaryKeys() {
-        return primaryKeys;
+        return new ArrayList<>(primaryKeys);
     }
 
     @Override

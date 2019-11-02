@@ -50,7 +50,8 @@ public class HiveUtils {
         List<String> tableCols = spark
                 .sql(String.format("DESC %s.%s",databaseTo,tableTo))
                 .toJavaRDD()
-                .map(row -> row.getString(0).trim())
+                .map(row -> row.getString(0)
+                        .trim())
                 .filter(v -> !v.startsWith("#"))
                 .collect();
 
@@ -68,7 +69,7 @@ public class HiveUtils {
         String usualCols = String.join(","
                 , LoaderUtils.getColsAndNullNoPartitions(
                         tableCols,
-                        data.schema().fieldNames(),
+                        Arrays.asList(data.schema().fieldNames()),
                         jobConf.getPartitions()
                 )
 
@@ -101,7 +102,7 @@ public class HiveUtils {
      * @param columnsArr
      * @throws Exception
      */
-    public static synchronized void createHiveTable(JobConfiguration jConfig, String[] columnsArr, TableType type) throws Exception {
+    public static synchronized void createHiveTable(JobConfiguration jConfig, List<String> columnsArr, TableType type) throws Exception {
         SparkSession spark = Assets.getInstance().getSpark();
 
         String schema = jConfig.getDbConfiguration().getSchema();
@@ -147,24 +148,24 @@ public class HiveUtils {
 
     public static synchronized void createTransactionalHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
 
-        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type).toArray(new String[0]), TableType.TRANSACTIONAL);
+        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type), TableType.TRANSACTIONAL);
 
     }
 
 
     public static synchronized void createTransactionalHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
-        createHiveTable(jConfig, listColumns.toArray(new String[0]), TableType.TRANSACTIONAL);
+        createHiveTable(jConfig, new ArrayList<>(listColumns), TableType.TRANSACTIONAL);
     }
 
 
     public static synchronized void createExternalHiveTable(JobConfiguration jConfig, StructType type) throws Exception {
 
-        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type).toArray(new String[0]), TableType.EXTERNAL);
+        createHiveTable(jConfig, LoaderUtils.getFormattingCols(type), TableType.EXTERNAL);
 
     }
 
     public static synchronized void createExternalHiveTable(JobConfiguration jConfig, Set<String> listColumns) throws Exception {
-        createHiveTable(jConfig, listColumns.toArray(new String[0]), TableType.EXTERNAL);
+        createHiveTable(jConfig, new ArrayList<>(listColumns), TableType.EXTERNAL);
     }
 
     public static synchronized void deleteFromHiveTable(JobConfiguration jConf, String dir) throws Exception {

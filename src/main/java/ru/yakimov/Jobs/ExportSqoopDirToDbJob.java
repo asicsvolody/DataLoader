@@ -23,7 +23,7 @@ public class ExportSqoopDirToDbJob extends Job {
     public Integer call() throws Exception {
         Log.write(jobConfig, "Sqoop get task Export");
 
-        if(jobConfig.getDirsFrom().length !=1){
+        if(jobConfig.getDirsFrom().size() !=1){
             Log.write(jobConfig, "Wrong dir from array size", Log.Level.ERROR);
             return 1;
         }
@@ -60,7 +60,7 @@ public class ExportSqoopDirToDbJob extends Job {
 
         if(process.exitValue() == 0){
             Log.write(jobConfig, "Delete dir from");
-            HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirsFrom()[0]);
+            HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirsFrom().get(0));
         }
 
         Log.write(jobConfig, "Delete password: " + SqoopUtils.getHadoopPasswordPath(jobConfig.getJobName() ));

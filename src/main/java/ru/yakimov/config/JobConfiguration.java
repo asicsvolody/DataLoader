@@ -42,8 +42,8 @@ public class JobConfiguration{
         return stage;
     }
 
-    public String[] getDirsFrom() {
-        return dirFrom.toArray(new String[0]);
+    public List<String> getDirsFrom() {
+        return new ArrayList<>(dirFrom);
     }
 
     public String getDirTo() {
@@ -51,8 +51,8 @@ public class JobConfiguration{
     }
 
 
-    public String[] getPartitions() {
-        return partitions.toArray(new String[0]);
+    public List<String> getPartitions() {
+        return new ArrayList<>(partitions);
     }
 
     public DBConfiguration getDbConfiguration() {

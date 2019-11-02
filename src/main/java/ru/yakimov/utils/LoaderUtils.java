@@ -21,6 +21,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.spark.sql.types.DataTypes.*;
 
@@ -33,46 +34,32 @@ public class LoaderUtils {
      * @param partition
      * @return
      */
-    public static String[] getUsualColumns(StructType type, String [] partition){
-        List<String> resCols = new ArrayList<>();
-        for (String field : type.fieldNames()) {
-            if(!isPartition(field, partition)){
-                resCols.add(field);
-            }
-        }
-        return resCols.toArray(new String[0]);
+    public static List<String> getUsualColumns(StructType type, List<String> partition){
+        return getUsualColumns(Arrays.asList(type.fieldNames()), partition);
     }
 
     /**
      * Метод выборки полей не партицирования
      *
-     * @param colsArr
+     * @param cols
      * @param partitions
      * @return
      */
-    public static String[] getUsualColumns(String[] colsArr, String[] partitions) {
-        List<String> resList = new ArrayList<>();
-        for (String col : colsArr) {
-            if(!isPartition(col, partitions )){
-                resList.add(col);
-            }
-        }
-        return resList.toArray(new String[0]);
+    public static List<String> getUsualColumns(List<String> cols, List<String> partitions) {
+        return cols.stream()
+                .filter(v ->!partitions.contains(v))
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Метод проверяет партицированное ли это поле
-     * @param name
-     * @param partitions
-     * @return
-     */
-    public static boolean isPartition(String name, String[] partitions) {
-        for (String partition : partitions) {
-            if(name.toLowerCase().equals(partition.toLowerCase()))
-                return true;
-        }
-        return false;
-    }
+//    /**
+//     * Метод проверяет партицированное ли это поле
+//     * @param name
+//     * @param partitions
+//     * @return
+//     */
+//    public static boolean isPartition(String name, List<String> partitions) {
+//        return partitions.contains(name);
+//    }
 
     /**
      * Метод возвращающий коллекциб String представления полей с ттпами Hive
@@ -81,12 +68,9 @@ public class LoaderUtils {
      * @return
      */
     public static List<String> getFormattingCols(StructType type) {
-
-        List<String> list = new ArrayList<>();
-        for (StructField field : type.fields()) {
-            list.add(field.name().toLowerCase() + " " + convertSparkTypeToHiveTypeStr(field.dataType()));
-        }
-        return list;
+        return Arrays.stream(type.fields())
+                .map(v -> v.name().toLowerCase() + " " + convertSparkTypeToHiveTypeStr(v.dataType()))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -135,11 +119,12 @@ public class LoaderUtils {
      * @throws Exception
      */
     public static void checkPartitions(List<String> columnsList, JobConfiguration jobConfig, String dir) throws Exception {
-        for (String partition : jobConfig.getPartitions()) {
-            if(!columnsList.contains(partition)){
-                Log.writeExceptionAndGet(jobConfig, "Data from dir: "+ dir + " have not column "+ partition);
-            }
-        }
+        Optional<String> colOpt = jobConfig.getPartitions()
+                .stream()
+                .filter(v -> !columnsList.contains(v))
+                .findAny();
+        if(colOpt.isPresent())
+            Log.writeExceptionAndGet(jobConfig, "Data from dir: "+ dir + " have not column "+ colOpt.get());
     }
 
     /**
@@ -150,19 +135,11 @@ public class LoaderUtils {
      * @param partitions
      * @return
      */
-    public static String[] getColsAndNullNoPartitions(List<String> tableColumnNames, String[] dataColumnNames, String[] partitions) {
-
-        List<String> partitionList = Arrays.asList(getColumnNameOnly(partitions));
-        List<String> dataColumnNamesList = Arrays.asList(dataColumnNames);
-
-        List<String> resList = new ArrayList<>();
-
-        for (String tableColumnName : tableColumnNames) {
-            if(!partitionList.contains(tableColumnName)){
-                resList.add((dataColumnNamesList.contains(tableColumnName))?tableColumnName: "null as " + tableColumnName);
-            }
-        }
-        return resList.toArray(new String[0]);
+    public static List<String> getColsAndNullNoPartitions(List<String> tableColumnNames, List<String> dataColumnNames,  List<String> partitions) {
+        return tableColumnNames.stream()
+                .filter(v -> !partitions.contains(v))
+                .map(v -> (dataColumnNames.contains(v)) ? v : "null as " + v)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -171,24 +148,16 @@ public class LoaderUtils {
      * @param colArr
      * @return
      */
-    public static String[] getColumnNameOnly(String[] colArr){
-        for (int i = 0; i <colArr.length ; i++) {
-            colArr[i] = colArr[i].split(" ")[0];
-        }
-        return colArr;
+    public static List<String> getColumnNameOnly(List<String> colArr){
+        return colArr.stream().map(v -> v.split("\\s")[0]).collect(Collectors.toList());
+
     }
 
     public static boolean schemaContainsAll(StructType schema, ArrayList<String> primaryKeys) {
-        List<String> dataColumns = Arrays.asList(schema.fieldNames());
-        for (String primaryKey : primaryKeys) {
-            if(!dataColumns.contains(primaryKey))
-                return false;
-
-        }
-        return true;
+        return Arrays.asList(schema.fieldNames()).containsAll(primaryKeys);
     }
 
-    public static void  deleteDirs(JobConfiguration jConf, String[] dirs) throws SQLException, IOException, XMLStreamException {
+    public static void  deleteDirs(JobConfiguration jConf, List<String> dirs) throws SQLException, IOException, XMLStreamException {
         for (String dir : dirs) {
             HdfsUtils.deleteDirWithLog(jConf, dir);
         }

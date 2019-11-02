@@ -120,10 +120,6 @@ public class SqoopUtils {
      * @throws SQLException
      */
     public static void writeResSqoop(JobConfiguration jobConfig, int prosExitValue) throws SQLException {
-        if (prosExitValue == 0) {
-            Log.write(jobConfig, "Sqoop successfully");
-        } else {
-            Log.write(jobConfig, "Sqoop error");
-        }
+        Log.write(jobConfig, (prosExitValue == 0)?"Sqoop successfully":"Sqoop error");
     }
 }
