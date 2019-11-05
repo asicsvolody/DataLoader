@@ -179,18 +179,20 @@ public class HiveUtils {
 
         Log.write(jConf, "Spark read new data from table");
 
-        String sparkScript = String.format("SELECT * FROM parquet.`%s/*.parquet`",dir);
+        String sparkScript = String.format("CREATE TEMPORARY TABLE tmp_table USING parquet OPTIONS(path '%s')",dir);
 
         Log.write(jConf, sparkScript);
 
-        Dataset<Row> data = spark.sql(sparkScript);
+        spark.sql(sparkScript);
+
+        Dataset<Row> data = spark.sql("SELECT * FROM tmp_table");
 
         if(!LoaderUtils.schemaContainsAll(data.schema(), jConf.getDbConfiguration().getPrimaryKeys())){
             Log.writeExceptionAndGet(jConf, "Primary keys from main table not exist");
         }
         data.show();
 
-        data.createOrReplaceTempView("tmp_table");
+//        data.createOrReplaceTempView("tmp_table");
 
         String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s PARTITION(%s) SELECT t.* FROM %s.%s t LEFT JOIN tmp_table ON %s WHERE %s"
                 ,schema
