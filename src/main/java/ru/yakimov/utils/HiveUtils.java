@@ -12,7 +12,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import org.apache.spark.sql.hive.HiveContext;
 import org.apache.spark.sql.types.StructType;
 import ru.yakimov.Assets;
 import ru.yakimov.MySqlDB.Log;
@@ -20,14 +19,13 @@ import ru.yakimov.config.JobConfiguration;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
-public class HiveUtils {
+public class HiveUtils implements Serializable {
 
     private enum TableType{
         EXTERNAL, TRANSACTIONAL
@@ -45,24 +43,23 @@ public class HiveUtils {
         String databaseTo = jobConf.getDbConfiguration().getSchema();
         String tableTo = jobConf.getDbConfiguration().getTable();
 
+        String tmpTableName = "tmp_"+dirFrom.replace("/","_");
+
         Log.write(jobConf, "Read table columns");
 
-        List<String> tableCols = spark
-                .sql(String.format("DESC %s.%s",databaseTo,tableTo))
-                .toJavaRDD()
-                .map(row -> row.getString(0)
-                        .trim())
-                .filter(v -> !v.startsWith("#"))
-                .collect();
+        List<String> tableCols = getColumnsHiveTable(databaseTo, tableTo);
 
         Log.write(jobConf, tableCols.toString());
 
         Log.write(jobConf, "Spark read data from dir "+ dirFrom);
 
-        Dataset<Row> data = spark.read()
-                .parquet(dirFrom + Assets.SEPARATOR + "*.parquet");
+        String sparkScript = String.format("CREATE TEMPORARY VIEW %s USING parquet OPTIONS(path '%s')",tmpTableName, dirFrom);
 
-        data.createOrReplaceTempView("tmp_table");
+        Log.write(jobConf, sparkScript);
+
+        spark.sql(sparkScript);
+
+        Dataset<Row> data = spark.sql("SELECT * FROM "+tmpTableName);
 
         data.show();
 
@@ -82,17 +79,32 @@ public class HiveUtils {
         Log.write(jobConf, "Write data to Hive Table");
 
         String hiveScript = String.format(
-                "INSERT INTO %s.%s PARTITION(%s) SELECT %s,%s FROM tmp_table"
+                "INSERT INTO %s.%s PARTITION(%s) SELECT %s,%s FROM %s"
                 , databaseTo
                 ,tableTo
                 ,partitionsCols
                 ,usualCols
                 ,partitionsCols
+                ,tmpTableName
         );
 
         Log.write(jobConf, hiveScript);
 
         spark.sql(hiveScript);
+    }
+
+    private static List<String> getColumnsHiveTable(String databaseTo, String tableTo) throws XMLStreamException, IOException, SQLException {
+        return Assets.getInstance().getSpark()
+                .sql(String.format("DESC %s.%s",databaseTo,tableTo))
+                .toJavaRDD()
+                .map(row -> row.getString(0)
+                        .trim())
+                .filter(v -> !v.startsWith("#"))
+                .collect();
+    }
+
+    private static List<String> getUsualColumnsHiveTable(String databaseTo, String tableTo, List<String> partitionColumns) throws XMLStreamException, IOException, SQLException {
+        return getColumnsHiveTable(databaseTo,tableTo).stream().filter(v -> !partitionColumns.contains(v)).collect(Collectors.toList());
     }
 
     /**
@@ -168,65 +180,110 @@ public class HiveUtils {
         createHiveTable(jConfig, new ArrayList<>(listColumns), TableType.EXTERNAL);
     }
 
-    public static synchronized void deleteFromHiveTable(JobConfiguration jConf, String dir) throws Exception {
+    public static synchronized void deleteFromHiveTable(JobConfiguration jobConf, String dir) throws Exception {
         SparkSession spark = Assets.getInstance().getSpark();
 
-        String schema = jConf.getDbConfiguration().getSchema();
-        String table = jConf.getDbConfiguration().getTable();
+        String schema = jobConf.getDbConfiguration().getSchema();
+        String table = jobConf.getDbConfiguration().getTable();
+        String tmpTableName = "tmp_"+jobConf.getJobName();
 
-        String partitionsCols= String.join(", ",LoaderUtils.getColumnNameOnly(jConf.getPartitions()));
 
+        List<String> partitionsColsList = LoaderUtils.getColumnNameOnly(jobConf.getPartitions());
 
-        Log.write(jConf, "Spark read new data from table");
+        String partitionsCols= String.join(", ",partitionsColsList);
 
-        String sparkScript = String.format("CREATE TEMPORARY TABLE tmp_table USING parquet OPTIONS(path '%s')",dir);
+        Log.write(jobConf, "Spark read new data from table");
 
-        Log.write(jConf, sparkScript);
+        String sparkScript = String.format("CREATE TEMPORARY VIEW %s USING parquet OPTIONS(path '%s')",tmpTableName,dir);
+
+        Log.write(jobConf, sparkScript);
 
         spark.sql(sparkScript);
 
-        Dataset<Row> data = spark.sql("SELECT * FROM tmp_table");
+        Dataset<Row> data = spark.sql("SELECT * FROM "+tmpTableName);
 
-        if(!LoaderUtils.schemaContainsAll(data.schema(), jConf.getDbConfiguration().getPrimaryKeys())){
-            Log.writeExceptionAndGet(jConf, "Primary keys from main table not exist");
+        if(!LoaderUtils.schemaContainsAll(data.schema(), jobConf.getDbConfiguration().getPrimaryKeys())){
+            Log.writeExceptionAndGet(jobConf, "Primary keys from main table not exist");
         }
         data.show();
 
+       List<Row> usingPartitionsRows = spark.sql(String.format("SELECT %s FROM %s"
+                , partitionsCols, tmpTableName))
+               .distinct()
+               .toJavaRDD()
+               .collect();
+
+       List<String[]> partitions = LoaderUtils.getPartitionData(usingPartitionsRows, partitionsColsList);
+
+       String usualColumnsWithT = getUsualColumnsHiveTable(schema, table, partitionsColsList)
+               .stream()
+               .map(v -> "t."+v)
+               .collect(Collectors.joining(","));
+
+
+
+        for (String[] partition : partitions) {
+            String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s PARTITION(%s) SELECT %s FROM %s.%s t LEFT JOIN %s ON %s WHERE %s AND %s"
+                    ,schema
+                    ,table
+                    ,String.join(",",partition)
+                    ,usualColumnsWithT
+                    ,schema
+                    ,table
+                    ,tmpTableName
+                    , getSelectPrimary(jobConf.getDbConfiguration().getPrimaryKeys(), tmpTableName)
+                    , LoaderUtils.getStringWithT(" AND ",partition)
+                    ,getPrimaryIsNull(jobConf.getDbConfiguration().getPrimaryKeys(), tmpTableName)
+            );
+
+            Log.write(jobConf, hiveScript);
+
+            Log.write(jobConf, String.format("Spark delete data from table %s.%s in partition %s"
+                    ,jobConf.getDbConfiguration().getSchema()
+                    ,jobConf.getDbConfiguration().getTable()
+                    ,String.join(",",partition)
+            ));
+
+            spark.sql(hiveScript);
+
+        }
+
+
 //        data.createOrReplaceTempView("tmp_table");
 
-        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s PARTITION(%s) SELECT t.* FROM %s.%s t LEFT JOIN tmp_table ON %s WHERE %s"
-                ,schema
-                ,table
-                ,partitionsCols
-                ,schema
-                ,table
-                , getSelectPrimary(jConf.getDbConfiguration().getPrimaryKeys())
-                ,getPrimaryIsNull(jConf.getDbConfiguration().getPrimaryKeys())
-        );
-
-        Log.write(jConf, hiveScript);
-
-        Log.write(jConf, String.format("Spark delete data from table %s.%s"
-                ,jConf.getDbConfiguration().getSchema()
-                ,jConf.getDbConfiguration().getTable()));
-
-//        spark.sql("SELECT t.* FROM jointSchema.jointTable t LEFT JOIN tmp_table ON t.user_id=tmp_table.user_id AND t.user_age=tmp_table.user_age WHERE tmp_table.user_id IS NULL AND tmp_table.user_age IS NULL").sort("t.user_id").show();
-        spark.sql(hiveScript);
+//        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s PARTITION(%s) SELECT t.* FROM %s.%s t LEFT JOIN tmp_table ON %s WHERE %s"
+//                ,schema
+//                ,table
+//                ,partitionsCols
+//                ,schema
+//                ,table
+//                , getSelectPrimary(jConf.getDbConfiguration().getPrimaryKeys())
+//                ,getPrimaryIsNull(jConf.getDbConfiguration().getPrimaryKeys())
+//        );
+//
+//        Log.write(jConf, hiveScript);
+//
+//        Log.write(jConf, String.format("Spark delete data from table %s.%s"
+//                ,jConf.getDbConfiguration().getSchema()
+//                ,jConf.getDbConfiguration().getTable()));
+//
+////        spark.sql("SELECT t.* FROM jointSchema.jointTable t LEFT JOIN tmp_table ON t.user_id=tmp_table.user_id AND t.user_age=tmp_table.user_age WHERE tmp_table.user_id IS NULL AND tmp_table.user_age IS NULL").sort("t.user_id").show();
+//        spark.sql(hiveScript);
 
     }
 
-    private static String getSelectPrimary(List<String> primaryKeys) {
+    private static String getSelectPrimary(List<String> primaryKeys, String tmpTable) {
         List<String> lines = new ArrayList<>();
         for (String primaryKey : primaryKeys) {
-            lines.add(String.format("t.%s=tmp_table.%s", primaryKey, primaryKey));
+            lines.add(String.format("t.%s=%s.%s", primaryKey,tmpTable, primaryKey));
         }
         return String.join(" AND ",lines.toArray(new String[0]));
     }
 
-    private static String getPrimaryIsNull(List<String> primaryKeys){
+    private static String getPrimaryIsNull(List<String> primaryKeys, String tmpTable){
         List<String> lines = new ArrayList<>();
         for (String primaryKey : primaryKeys) {
-            lines.add(String.format("tmp_table.%s IS NULL", primaryKey));
+            lines.add(String.format("%s.%s IS NULL",tmpTable, primaryKey));
         }
         return String.join(" AND ",lines.toArray(new String[0]));
     }

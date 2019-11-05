@@ -34,6 +34,8 @@ public class SparkUtils {
                 .read()
                 .parquet(dir + Assets.SEPARATOR + "*.parquet").schema();
 
+        Log.write(jobConfig, schema.toString());
+
         List<String> colsList = LoaderUtils.getFormattingCols(schema);
 
         Log.write(jobConfig, "Checking portions fields");

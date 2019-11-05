@@ -19,13 +19,14 @@ import ru.yakimov.config.JobConfiguration;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.spark.sql.types.DataTypes.*;
 
-public class LoaderUtils {
+public class LoaderUtils implements Serializable {
 
     /**
      * Метод выборки полей не партицирования
@@ -161,5 +162,19 @@ public class LoaderUtils {
         for (String dir : dirs) {
             HdfsUtils.deleteDirWithLog(jConf, dir);
         }
+    }
+
+    public static List<String[]> getPartitionData(List<Row> rows, List<String> partitions){
+        List <String[]> resPartitions = new ArrayList<>();
+        for (Row row : rows) {
+            resPartitions.add(partitions
+                    .stream()
+                    .map(v -> v + "='"+ row.get(row.fieldIndex(v)) + "'").toArray(String[]::new));
+        }
+            return resPartitions;
+    }
+
+    public static String getStringWithT(String delimiter, String[] partition) {
+        return Arrays.stream(partition).map(v -> "t."+v).collect(Collectors.joining(delimiter));
     }
 }
