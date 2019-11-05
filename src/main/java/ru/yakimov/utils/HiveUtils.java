@@ -70,7 +70,7 @@ public class HiveUtils {
                 , LoaderUtils.getColsAndNullNoPartitions(
                         tableCols,
                         Arrays.asList(data.schema().fieldNames()),
-                        jobConf.getPartitions()
+                        LoaderUtils.getColumnNameOnly(jobConf.getPartitions())
                 )
 
         );
