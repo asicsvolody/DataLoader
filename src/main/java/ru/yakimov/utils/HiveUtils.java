@@ -248,28 +248,6 @@ public class HiveUtils implements Serializable {
 
         }
 
-
-//        data.createOrReplaceTempView("tmp_table");
-
-//        String hiveScript = String.format("INSERT OVERWRITE TABLE %s.%s PARTITION(%s) SELECT t.* FROM %s.%s t LEFT JOIN tmp_table ON %s WHERE %s"
-//                ,schema
-//                ,table
-//                ,partitionsCols
-//                ,schema
-//                ,table
-//                , getSelectPrimary(jConf.getDbConfiguration().getPrimaryKeys())
-//                ,getPrimaryIsNull(jConf.getDbConfiguration().getPrimaryKeys())
-//        );
-//
-//        Log.write(jConf, hiveScript);
-//
-//        Log.write(jConf, String.format("Spark delete data from table %s.%s"
-//                ,jConf.getDbConfiguration().getSchema()
-//                ,jConf.getDbConfiguration().getTable()));
-//
-////        spark.sql("SELECT t.* FROM jointSchema.jointTable t LEFT JOIN tmp_table ON t.user_id=tmp_table.user_id AND t.user_age=tmp_table.user_age WHERE tmp_table.user_id IS NULL AND tmp_table.user_age IS NULL").sort("t.user_id").show();
-//        spark.sql(hiveScript);
-
     }
 
     private static String getSelectPrimary(List<String> primaryKeys, String tmpTable) {
