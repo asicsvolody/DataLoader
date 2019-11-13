@@ -9,9 +9,7 @@
 
 package ru.yakimov.Jobs;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.JobContextConfiguration;
 import ru.yakimov.config.JobConfiguration;
 import ru.yakimov.config.RootJobConfiguration;
@@ -26,7 +24,7 @@ public class RootJob implements Callable<Integer> {
     public static final Class CONTEXT_CLASS = JobContextConfiguration.class;
 
 
-    private static final ApplicationContext context = new AnnotationConfigApplicationContext(CONTEXT_CLASS);
+//    private static final ApplicationContext context = new AnnotationConfigApplicationContext(CONTEXT_CLASS);
 
     private String rootJobName;
 
@@ -69,7 +67,7 @@ public class RootJob implements Callable<Integer> {
             for (String jobName : futuresMap.keySet()) {
                 if(futuresMap.get(jobName).get() != 0){
                     Log.writeRoot(rootJobName, "Error in stage: " + stage + "Job: "+ jobName, Log.Level.ERROR);
-                    Log.writeRoot(Assets.MAIN_PROS, "Error in stage: "+ stage + " in " +rootJobName+" / "+ jobName );
+                    Log.writeRoot(BootProcessMain.MAIN_PROS, "Error in stage: "+ stage + " in " +rootJobName+" / "+ jobName );
                     return 1;
                 }
 
@@ -92,7 +90,7 @@ public class RootJob implements Callable<Integer> {
             int stage = jobConfig.getStage();
             Job job = null;
             try {
-                job = (Job) context.getBean(Class.forName(jobConfig.getJobClass()));
+                job = (Job) BootProcessMain.CONTEXT.getBean(Class.forName(jobConfig.getJobClass()));
             } catch (ClassNotFoundException e) {
                 throw new ClassNotFoundException("There is't job class: "+jobConfig.getJobClass() );
             }

@@ -9,9 +9,14 @@
 
 package ru.yakimov;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import ru.yakimov.Jobs.RootJob;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.MySqlDB.LogsFileWriter;
+import ru.yakimov.MySqlDB.MySqlDb;
+import ru.yakimov.config.AppConfiguration;
+import ru.yakimov.config.JobXmlLoader;
 import ru.yakimov.utils.RootJobsCreator;
 
 import java.sql.SQLException;
@@ -20,17 +25,35 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class BootProcessMain {
+
+    public static final ApplicationContext CONTEXT = new AnnotationConfigApplicationContext(JobContextConfiguration.class);
+
+    public static final String SEPARATOR = "/";
+    public final static String CONF_FILE_PATH = "conf.xml";
+    public static final String MAIN_PROS = JobXmlLoader.createNameWithData("SYSTEM_PROSES");
+
     private RootJob[] rootJobs;
 
 
     public BootProcessMain() {
+
         try {
 
-            rootJobs = RootJobsCreator.getRootJobsFromDir(Assets.getInstance().getConf().getJobsDir());
+            AppConfiguration appConfig = CONTEXT.getBean(AppConfiguration.class);
+
+
+        try {
+            MySqlDb.initConnection(appConfig.getWorkSchema());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new SQLException("Exception connection to log database");
+        }
+
+            rootJobs = RootJobsCreator.getRootJobsFromDir(appConfig.getJobsDir());
 
 
             if (rootJobs == null) {
-                Log.writeRoot(Assets.MAIN_PROS, "Jobs not found");
+                Log.writeRoot(MAIN_PROS, "Jobs not found");
                 return;
             }
 
@@ -38,16 +61,16 @@ public class BootProcessMain {
 
             Map<String, Future<Integer>> futureMap = new HashMap<>();
 
-            Log.writeRoot(Assets.MAIN_PROS, "ExecutorService is ready");
+            Log.writeRoot(MAIN_PROS, "ExecutorService is ready");
 
 
             for (RootJob rootJob : rootJobs) {
                 futureMap.put(rootJob.getRootJobName(), service.submit(rootJob));
 
-                Log.writeRoot(Assets.MAIN_PROS, rootJob.getRootJobName()+"have been run");
+                Log.writeRoot(MAIN_PROS, rootJob.getRootJobName()+"have been run");
             }
 
-            Log.writeRoot(Assets.MAIN_PROS, "All jobs have been run");
+            Log.writeRoot(MAIN_PROS, "All jobs have been run");
 
             service.shutdown();
 
@@ -57,11 +80,11 @@ public class BootProcessMain {
             for (String rootJobName : futureMap.keySet()) {
                 printFutureResults(rootJobName, futureMap.get(rootJobName));
             }
-            Log.writeRoot(Assets.MAIN_PROS, "BootProsesMain has finished.");
+            Log.writeRoot(MAIN_PROS, "BootProsesMain has finished.");
 
-            Log.writeRoot(Assets.MAIN_PROS, "Write logs files.");
+            Log.writeRoot(MAIN_PROS, "Write logs files.");
 
-            Log.writeRoot(Assets.MAIN_PROS, "Finish!!!");
+            Log.writeRoot(MAIN_PROS, "Finish!!!");
 
 
 
@@ -71,7 +94,7 @@ public class BootProcessMain {
         }
         catch (Exception e){
             e.printStackTrace();
-            Log.writeSysException(Assets.MAIN_PROS, e);
+            Log.writeSysException(MAIN_PROS, e);
         }
         finally {
 
@@ -81,14 +104,12 @@ public class BootProcessMain {
                         LogsFileWriter.writeRootLog(rootJob.getRootJobName());
                     }
                 }
-                LogsFileWriter.writeRootLog(Assets.MAIN_PROS);
+                LogsFileWriter.writeRootLog(MAIN_PROS);
             } catch (Exception e) {
                 System.out.println("Logs not write");
                 e.printStackTrace();
             }
-
-            Assets.closeResources();
-
+            MySqlDb.closeConnection();
         }
 
     }
@@ -114,7 +135,7 @@ public class BootProcessMain {
         }
 
         System.out.println(str.toString());
-        Log.writeRoot(Assets.MAIN_PROS, str.toString());
+        Log.writeRoot(MAIN_PROS, str.toString());
     }
 
     public static void main(String[] args) {

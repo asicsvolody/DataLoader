@@ -10,7 +10,7 @@ package ru.yakimov.utils;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.config.JobConfiguration;
 import ru.yakimov.MySqlDB.Log;
 
@@ -34,13 +34,13 @@ public class SqoopUtils {
      */
     public static void createPassword(String password, JobConfiguration config) throws XMLStreamException, IOException, SQLException {
 
-        File passwordFile = new File(PASSWORD_FILE_PATH_DIR+ Assets.SEPARATOR+getPasswordFileName(config.getJobName()));
+        File passwordFile = new File(PASSWORD_FILE_PATH_DIR+ BootProcessMain.SEPARATOR+getPasswordFileName(config.getJobName()));
 
         Log.write(config,"Wold be created password file: "+ passwordFile.getPath());
 
 
 
-        FileSystem fs = Assets.getInstance().getFs();
+        FileSystem fs = BootProcessMain.CONTEXT.getBean(FileSystem.class);
 
 
         try(FileWriter fw = new FileWriter(passwordFile)) {
@@ -110,7 +110,7 @@ public class SqoopUtils {
      * @return
      */
     public static String getHadoopPasswordPath(String jobIdentifier){
-        return PASSWORD_HADOOP_PATH_DIR+Assets.SEPARATOR+getPasswordFileName(jobIdentifier);
+        return PASSWORD_HADOOP_PATH_DIR + BootProcessMain.SEPARATOR + getPasswordFileName(jobIdentifier);
     }
 
     /**

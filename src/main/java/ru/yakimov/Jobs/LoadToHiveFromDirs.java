@@ -13,7 +13,7 @@ package ru.yakimov.Jobs;
 
 
 import org.apache.spark.sql.SparkSession;
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.utils.HdfsUtils;
 import ru.yakimov.utils.HiveUtils;
@@ -26,7 +26,7 @@ public class LoadToHiveFromDirs extends Job {
     @Override
     public Integer call() throws Exception {
 
-        SparkSession spark = Assets.getInstance().getSpark();
+        SparkSession spark = BootProcessMain.CONTEXT.getBean(SparkSession.class);
 
         Log.write(jobConfig, "Checking directory to");
 

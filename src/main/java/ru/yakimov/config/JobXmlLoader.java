@@ -9,7 +9,7 @@
 package ru.yakimov.config;
 
 import jodd.util.MathUtil;
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.MySqlDB.Log;
 
 import javax.xml.stream.XMLEventReader;
@@ -79,7 +79,7 @@ public class JobXmlLoader {
                     if(endElement.getName().getLocalPart().equals(ROOT_JOB)){
                         if(config != null && config.getRootJobName() != null) {
                             resConfig = config;
-                            Log.writeRoot(Assets.MAIN_PROS, "Configuration have gotten for " + resConfig.getRootJobName());
+                            Log.writeRoot(BootProcessMain.MAIN_PROS, "Configuration have gotten for " + resConfig.getRootJobName());
                         }
                         break;
                     }
@@ -88,7 +88,7 @@ public class JobXmlLoader {
 
         } catch (Exception e) {
             e.printStackTrace();
-            Log.writeSysException(Assets.MAIN_PROS, e);
+            Log.writeSysException(BootProcessMain.MAIN_PROS, e);
         }
         return resConfig;
     }

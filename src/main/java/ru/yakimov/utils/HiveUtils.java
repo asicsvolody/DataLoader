@@ -13,7 +13,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 import org.apache.spark.sql.types.StructType;
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.config.JobConfiguration;
 
@@ -39,7 +39,7 @@ public class HiveUtils implements Serializable {
      * @throws Exception
      */
     public static void insetToHiveTable(JobConfiguration jobConf, String dirFrom ) throws Exception {
-        SparkSession spark = Assets.getInstance().getSpark();
+        SparkSession spark = BootProcessMain.CONTEXT.getBean(SparkSession.class);
         String databaseTo = jobConf.getDbConfiguration().getSchema();
         String tableTo = jobConf.getDbConfiguration().getTable();
 
@@ -94,7 +94,7 @@ public class HiveUtils implements Serializable {
     }
 
     private static List<String> getColumnsHiveTable(String databaseTo, String tableTo) throws XMLStreamException, IOException, SQLException {
-        return Assets.getInstance().getSpark()
+        return BootProcessMain.CONTEXT.getBean(SparkSession.class)
                 .sql(String.format("DESC %s.%s",databaseTo,tableTo))
                 .toJavaRDD()
                 .map(row -> row.getString(0)
@@ -115,7 +115,7 @@ public class HiveUtils implements Serializable {
      * @throws Exception
      */
     public static synchronized void createHiveTable(JobConfiguration jConfig, List<String> columnsArr, TableType type) throws Exception {
-        SparkSession spark = Assets.getInstance().getSpark();
+        SparkSession spark = BootProcessMain.CONTEXT.getBean(SparkSession.class);
 
         String schema = jConfig.getDbConfiguration().getSchema();
 
@@ -139,7 +139,7 @@ public class HiveUtils implements Serializable {
 
         spark.sql(String.format("DROP TABLE IF EXISTS %s.%s", schema, jConfig.getDbConfiguration().getTable()));
 
-        HdfsUtils.deleteDirWithLog(jConfig, Assets.SEPARATOR +schema + Assets.SEPARATOR+ table);
+        HdfsUtils.deleteDirWithLog(jConfig, BootProcessMain.SEPARATOR +schema + BootProcessMain.SEPARATOR+ table);
 
 
         String cols = String.join(", ", LoaderUtils.getUsualColumns(columnsArr, jConfig.getPartitions()));
@@ -181,7 +181,7 @@ public class HiveUtils implements Serializable {
     }
 
     public static synchronized void deleteFromHiveTable(JobConfiguration jobConf, String dir) throws Exception {
-        SparkSession spark = Assets.getInstance().getSpark();
+        SparkSession spark = BootProcessMain.CONTEXT.getBean(SparkSession.class);
 
         String schema = jobConf.getDbConfiguration().getSchema();
         String table = jobConf.getDbConfiguration().getTable();

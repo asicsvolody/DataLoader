@@ -8,7 +8,8 @@
 
 package ru.yakimov.MySqlDB;
 
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
+import ru.yakimov.config.AppConfiguration;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -50,9 +51,9 @@ public class LogsFileWriter {
      * @throws Exception
      */
     public static void write (String jobName, String column) throws Exception {
-        File dirTo = new File(Assets.getInstance().getConf().getLogsDir());
+        File dirTo = new File(BootProcessMain.CONTEXT.getBean(AppConfiguration.class).getLogsDir());
         if(dirTo.mkdirs()){
-            Log.writeRoot(Assets.MAIN_PROS, "Log dir to have created: "+dirTo.getPath());
+            Log.writeRoot(BootProcessMain.MAIN_PROS, "Log dir to have created: "+dirTo.getPath());
         }
 
         String sql = String.format("SELECT SYSTEM_LOG_MSG FROM SYSTEM_LOG WHERE %s = '%s'",column, jobName);
@@ -60,14 +61,14 @@ public class LogsFileWriter {
 
 
         try(FileWriter output = new FileWriter(new File(
-                dirTo.toString()+Assets.SEPARATOR+jobName+".log"))){
+                dirTo.toString()+BootProcessMain.SEPARATOR+jobName+".log"))){
             for (String s : logsArr) {
                 output.write(s +"\n");
             }
 
         }catch (IOException e){
             e.printStackTrace();
-            Log.writeRootException(Assets.MAIN_PROS, e);
+            Log.writeRootException(BootProcessMain.MAIN_PROS, e);
         }
     }
 

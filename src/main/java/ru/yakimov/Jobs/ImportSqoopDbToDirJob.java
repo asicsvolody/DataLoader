@@ -9,7 +9,6 @@
 package ru.yakimov.Jobs;
 
 import org.springframework.stereotype.Component;
-import ru.yakimov.Assets;
 import ru.yakimov.config.DBConfiguration;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.utils.HdfsUtils;
@@ -36,7 +35,7 @@ public class ImportSqoopDbToDirJob extends Job {
         HdfsUtils.deleteDirWithLog(jobConfig, jobConfig.getDirTo());
 
         Log.write(jobConfig, "Sqoop run process");
-        Process process = Assets.getInstance().getRt().exec(String.format("sqoop import " +
+        Process process = Runtime.getRuntime().exec(String.format("sqoop import " +
                         "--connect jdbc:mysql://%s:%s/%s?serverTimezone=UTC&zeroDateTimeBehavior=CONVERT_TO_NULL " +
                         "--username %s " +
                         "--password-file %s " +

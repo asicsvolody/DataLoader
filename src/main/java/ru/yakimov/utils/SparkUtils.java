@@ -11,7 +11,7 @@ package ru.yakimov.utils;
 
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.config.JobConfiguration;
 import java.util.*;
@@ -27,12 +27,12 @@ public class SparkUtils {
      */
     public static List<String> getFormattingColsFromDir(String dir, JobConfiguration jobConfig) throws Exception {
 
-        SparkSession spark = Assets.getInstance().getSpark();
+        SparkSession spark = BootProcessMain.CONTEXT.getBean(SparkSession.class);
 
         Log.write(jobConfig, "Spark read schema from dir "+ dir);
         StructType schema = spark
                 .read()
-                .parquet(dir + Assets.SEPARATOR + "*.parquet").schema();
+                .parquet(dir + BootProcessMain.SEPARATOR + "*.parquet").schema();
 
         Log.write(jobConfig, schema.toString());
 

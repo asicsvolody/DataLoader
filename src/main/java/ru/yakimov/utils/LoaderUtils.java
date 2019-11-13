@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.apache.spark.sql.types.DataTypes.*;
 
@@ -50,6 +51,7 @@ public class LoaderUtils implements Serializable {
         return cols.stream()
                 .filter(v ->!partitions.contains(v))
                 .collect(Collectors.toList());
+
     }
 
 //    /**

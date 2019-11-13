@@ -12,7 +12,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.config.JobConfiguration;
 import ru.yakimov.MySqlDB.Log;
 
@@ -32,7 +32,7 @@ public class HdfsUtils {
      * @throws SQLException
      */
     public static synchronized boolean deleteFromHadoop(String path) throws XMLStreamException, IOException, SQLException {
-        FileSystem fs = Assets.getInstance().getFs();
+        FileSystem fs = BootProcessMain.CONTEXT.getBean(FileSystem.class);
         Path file = new Path(path);
         if(fs.exists(file)){
             fs.delete(file, true);
@@ -67,7 +67,7 @@ public class HdfsUtils {
      */
     public static synchronized boolean writeToHdfs(String pathStr, String str) throws XMLStreamException, IOException, SQLException {
 
-        FileSystem fs = Assets.getInstance().getFs();
+        FileSystem fs = BootProcessMain.CONTEXT.getBean(FileSystem.class);
         Path path = new Path(pathStr);
         deleteFromHadoop(pathStr);
 
@@ -91,7 +91,7 @@ public class HdfsUtils {
      * @throws SQLException
      */
     public static synchronized String readFromHdfs(String pathStr) throws XMLStreamException, IOException, SQLException {
-        FileSystem fs = Assets.getInstance().getFs();
+        FileSystem fs = BootProcessMain.CONTEXT.getBean(FileSystem.class);
         Path path = new Path(pathStr);
         String res = null;
         try(FSDataInputStream in = fs.open(path)){

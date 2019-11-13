@@ -8,7 +8,7 @@
 
 package ru.yakimov.utils;
 
-import ru.yakimov.Assets;
+import ru.yakimov.BootProcessMain;
 import ru.yakimov.Jobs.RootJob;
 import ru.yakimov.config.JobXmlLoader;
 import ru.yakimov.config.RootJobConfiguration;
@@ -38,11 +38,11 @@ public class RootJobsCreator {
 
         for (File file : rootJobsFiles) {
             if(file.getPath().endsWith(".jxml")){
-                Log.writeRoot(Assets.MAIN_PROS, "Read file: "+file.getPath());
+                Log.writeRoot(BootProcessMain.MAIN_PROS, "Read file: "+file.getPath());
                 RootJob rootJob = getRootJobsFromFile(file);
                 if(rootJob != null){
                     resRootJobs.add(rootJob);
-                    Log.writeRoot(Assets.MAIN_PROS, "Create new rootJob:"+ rootJob.getRootJobName());
+                    Log.writeRoot(BootProcessMain.MAIN_PROS, "Create new rootJob:"+ rootJob.getRootJobName());
                 }
 
             }
@@ -63,16 +63,16 @@ public class RootJobsCreator {
 
         RootJobConfiguration config = JobXmlLoader.readConfJob(file);
         if(config == null) {
-            Log.writeRoot(Assets.MAIN_PROS, "Wrong configuration from file: "+ file.getPath());
+            Log.writeRoot(BootProcessMain.MAIN_PROS, "Wrong configuration from file: "+ file.getPath());
             return null;
         }
-        Log.writeRoot(Assets.MAIN_PROS, "Create new root job configuration:"+ config.getRootJobName());
+        Log.writeRoot(BootProcessMain.MAIN_PROS, "Create new root job configuration:"+ config.getRootJobName());
         try {
             rootJob = new RootJob(JobXmlLoader.readConfJob(file));
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            Log.writeSysException(Assets.MAIN_PROS, e);
+            Log.writeSysException(BootProcessMain.MAIN_PROS, e);
         }
 
         return rootJob;

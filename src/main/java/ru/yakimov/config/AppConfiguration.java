@@ -7,6 +7,8 @@
 
 package ru.yakimov.config;
 
+import org.springframework.stereotype.Component;
+
 public class AppConfiguration {
 
     private String hdfsHost;
