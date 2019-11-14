@@ -4,10 +4,10 @@
  * E-mail: yakimovvn@bk.ru
  */
 
-package ru.yakimov.MySqlDB;
+package ru.yakimov.LogDB;
 
-import org.joda.time.DateTime;
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "SYSTEM_LOG")
@@ -31,18 +31,19 @@ public class SystemLog {
     @Column(name = "SYSTEM_LOG_LEVEL", nullable = false)
     private String level;
 
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Temporal(value = TemporalType.TIMESTAMP)
     @Column(name = "SYSTEM_LOG_DATE")
-    private DateTime dateTime;
+    private Date date;
 
     public SystemLog() {
     }
 
-    public SystemLog(String jobName, String rootJob, String msg, String level) {
+    public SystemLog(String jobName, String rootJob, String msg, Date dateTime, String level) {
         this.jobName = jobName;
         this.rootJob = rootJob;
         this.msg = msg;
         this.level = level;
+        this.date = dateTime;
     }
 
     public int getId() {
@@ -65,10 +66,9 @@ public class SystemLog {
         return level;
     }
 
-    public DateTime getDate() {
-        return dateTime;
+    public Date getDate() {
+        return date;
     }
-
     public void setId(int id) {
         this.id = id;
     }
@@ -89,8 +89,8 @@ public class SystemLog {
         this.level = level;
     }
 
-    public void setDate(DateTime date) {
-        this.dateTime = date;
+    public void setDate(Date dateTime) {
+        this.date = dateTime;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class SystemLog {
                 ", rootJob='" + rootJob + '\'' +
                 ", msg='" + msg + '\'' +
                 ", level='" + level + '\'' +
-                ", date=" + dateTime +
+                ", date=" + date +
                 '}';
     }
 }

@@ -12,8 +12,8 @@ package ru.yakimov;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import ru.yakimov.Jobs.RootJob;
-import ru.yakimov.MySqlDB.LogsFileWriter;
-import ru.yakimov.MySqlDB.MySqlDb;
+import ru.yakimov.LogDB.Log;
+import ru.yakimov.LogDB.LogsFileWriter;
 import ru.yakimov.config.AppConfiguration;
 import ru.yakimov.config.JobXmlLoader;
 import ru.yakimov.utils.RootJobsCreator;
@@ -39,15 +39,6 @@ public class BootProcessMain {
         try {
 
             AppConfiguration appConfig = CONTEXT.getBean(AppConfiguration.class);
-
-
-        try {
-            MySqlDb.initConnection(appConfig.getWorkSchema());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new SQLException("Exception connection to log database");
-        }
-
             rootJobs = RootJobsCreator.getRootJobsFromDir(appConfig.getJobsDir());
 
 
@@ -108,7 +99,8 @@ public class BootProcessMain {
                 System.out.println("Logs not write");
                 e.printStackTrace();
             }
-            MySqlDb.closeConnection();
+
+            Log.closeConnection();
         }
 
     }

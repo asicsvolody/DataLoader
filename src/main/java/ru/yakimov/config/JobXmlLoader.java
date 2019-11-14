@@ -10,7 +10,7 @@ package ru.yakimov.config;
 
 import jodd.util.MathUtil;
 import ru.yakimov.BootProcessMain;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;

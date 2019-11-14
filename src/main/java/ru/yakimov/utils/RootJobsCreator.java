@@ -12,7 +12,7 @@ import ru.yakimov.BootProcessMain;
 import ru.yakimov.Jobs.RootJob;
 import ru.yakimov.config.JobXmlLoader;
 import ru.yakimov.config.RootJobConfiguration;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 
 import java.io.File;
 import java.sql.SQLException;

@@ -12,7 +12,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import ru.yakimov.BootProcessMain;
 import ru.yakimov.config.JobConfiguration;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;

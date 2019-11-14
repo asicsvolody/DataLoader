@@ -13,7 +13,7 @@ import ru.yakimov.BootProcessMain;
 import ru.yakimov.JobContextConfiguration;
 import ru.yakimov.config.JobConfiguration;
 import ru.yakimov.config.RootJobConfiguration;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 
 import java.util.*;
 import java.util.List;

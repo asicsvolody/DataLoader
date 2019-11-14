@@ -3,7 +3,7 @@
         "-//Hibernate/Hibernate Mapping DTD//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
-    <class name="ru.yakimov.MySqlDB.SystemLog" table="SYSTEM_LOG">
+    <class name="ru.yakimov.LogDB.SystemLog" table="SYSTEM_LOG">
         <meta attribute="class-description">
             This class contains developer's details.
         </meta>

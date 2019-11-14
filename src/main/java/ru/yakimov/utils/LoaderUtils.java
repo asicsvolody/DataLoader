@@ -8,13 +8,10 @@
 
 package ru.yakimov.utils;
 
-import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataType;
-import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 import ru.yakimov.config.JobConfiguration;
 
 import javax.xml.stream.XMLStreamException;
@@ -23,7 +20,6 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.apache.spark.sql.types.DataTypes.*;
 

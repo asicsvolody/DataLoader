@@ -14,7 +14,7 @@ import org.apache.spark.sql.SparkSession;
 
 import org.apache.spark.sql.types.StructType;
 import ru.yakimov.BootProcessMain;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 import ru.yakimov.config.JobConfiguration;
 
 import javax.xml.stream.XMLStreamException;

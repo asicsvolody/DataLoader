@@ -14,7 +14,7 @@ package ru.yakimov.Jobs;
 
 import org.apache.spark.sql.SparkSession;
 import ru.yakimov.BootProcessMain;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 import ru.yakimov.utils.HdfsUtils;
 import ru.yakimov.utils.HiveUtils;
 import ru.yakimov.utils.LoaderUtils;

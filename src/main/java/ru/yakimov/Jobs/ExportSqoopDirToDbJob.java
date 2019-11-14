@@ -10,7 +10,7 @@ package ru.yakimov.Jobs;
 
 import org.springframework.stereotype.Component;
 import ru.yakimov.config.DBConfiguration;
-import ru.yakimov.MySqlDB.Log;
+import ru.yakimov.LogDB.Log;
 import ru.yakimov.utils.HdfsUtils;
 import ru.yakimov.utils.SqoopUtils;
 
