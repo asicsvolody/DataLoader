@@ -18,8 +18,8 @@ import java.util.List;
 
 public class LogsFileWriter {
 
-    public static final String JOB_NAME_COLUMN = "SYSTEM_LOG_JOB_NAME";
-    public static final String ROOT_NAME_COLUMN = "SYSTEM_LOG_ROOT_JOB";
+    public static final String JOB_NAME_COLUMN = "jobName";
+    public static final String ROOT_NAME_COLUMN = "rootJob";
 
 
     public static void writeJobLog (String jobName) {

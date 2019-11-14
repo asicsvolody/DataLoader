@@ -69,7 +69,7 @@ public class Log {
         Transaction transaction = null;
 
         transaction = session.beginTransaction();
-        List<SystemLog> systemLogs = session.createQuery(String.format("FROM SystemLog WHERE %s=%s",jobName, column)).list();
+        List<SystemLog> systemLogs = session.createQuery(String.format("FROM SystemLog S WHERE S.%s='%s'", column, jobName)).list();
 
         transaction.commit();
         session.close();
