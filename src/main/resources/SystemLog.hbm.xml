@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="ru.yakimov.MySqlDB.SystemLog" table="SYSTEM_LOG">
+        <meta attribute="class-description">
+            This class contains developer's details.
+        </meta>
+        <id name="id" type="int" column="SYSTEM_LOG_ID">
+            <generator class="native"/>
+        </id>
+        <property name="jobName" column="SYSTEM_LOG_JOB_NAME" type="string"/>
+        <property name="rootJob" column="SYSTEM_LOG_ROOT_JOB" type="string"/>
+        <property name="msg" column="SYSTEM_LOG_MSG" type="string"/>
+        <property name="level" column="SYSTEM_LOG_LEVEL" type="string"/>
+        <property name="date" column="SYSTEM_LOG_DATE" type="date"/>
+    </class>
+</hibernate-mapping>

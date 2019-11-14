@@ -16,7 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-public class LogsFileWriter {
+public class Log {
 
     public static final String JOB_NAME_COLUMN = "SYSTEM_LOG_JOB_NAME";
     public static final String ROOT_NAME_COLUMN = "SYSTEM_LOG_ROOT_JOB";
@@ -29,7 +29,7 @@ public class LogsFileWriter {
      * @throws Exception
      */
     public static void writeJobLog (String jobName) throws Exception {
-        write(jobName, JOB_NAME_COLUMN);
+        write(JOB_NAME_COLUMN,jobName);
     }
 
     /**
@@ -39,37 +39,51 @@ public class LogsFileWriter {
      * @throws Exception
      */
     public static void writeRootLog (String jobName) throws Exception {
-        write(jobName, ROOT_NAME_COLUMN);
+        write(ROOT_NAME_COLUMN,jobName);
     }
 
 
-    /**
-     * Запись логов определённого процесса
-     *
-     * @param jobName
-     * @param column
-     * @throws Exception
-     */
-    public static void write (String jobName, String column) throws Exception {
+
+    public static void write (String colum, String jobName) throws Exception {
         File dirTo = new File(BootProcessMain.CONTEXT.getBean(AppConfiguration.class).getLogsDir());
         if(dirTo.mkdirs()){
             Log.writeRoot(BootProcessMain.MAIN_PROS, "Log dir to have created: "+dirTo.getPath());
         }
-
-        String sql = String.format("SELECT SYSTEM_LOG_MSG FROM SYSTEM_LOG WHERE %s = '%s'",column, jobName);
-        List<String> logsArr = MySqlDb.getSqlResults(sql);
-
+        List<SystemLog> logsList = LogHib.getLogs(colum, jobName);
 
         try(FileWriter output = new FileWriter(new File(
                 dirTo.toString()+BootProcessMain.SEPARATOR+jobName+".log"))){
-            for (String s : logsArr) {
-                output.write(s +"\n");
+            for (SystemLog log : logsList) {
+                output.write(log.getMsg() +"\n");
             }
 
         }catch (IOException e){
             e.printStackTrace();
             Log.writeRootException(BootProcessMain.MAIN_PROS, e);
         }
+
+
+
+
+//        File dirTo = new File(BootProcessMain.CONTEXT.getBean(AppConfiguration.class).getLogsDir());
+//        if(dirTo.mkdirs()){
+//            Log.writeRoot(BootProcessMain.MAIN_PROS, "Log dir to have created: "+dirTo.getPath());
+//        }
+//
+//        String sql = String.format("SELECT SYSTEM_LOG_MSG FROM SYSTEM_LOG WHERE %s = '%s'",column, jobName);
+//        List<String> logsArr = MySqlDb.getLogs(sql);
+//
+//
+//        try(FileWriter output = new FileWriter(new File(
+//                dirTo.toString()+BootProcessMain.SEPARATOR+jobName+".log"))){
+//            for (String s : logsArr) {
+//                output.write(s +"\n");
+//            }
+//
+//        }catch (IOException e){
+//            e.printStackTrace();
+//            Log.writeRootException(BootProcessMain.MAIN_PROS, e);
+//        }
     }
 
 }

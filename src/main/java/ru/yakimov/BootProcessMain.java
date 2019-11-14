@@ -12,7 +12,6 @@ package ru.yakimov;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import ru.yakimov.Jobs.RootJob;
-import ru.yakimov.MySqlDB.Log;
 import ru.yakimov.MySqlDB.LogsFileWriter;
 import ru.yakimov.MySqlDB.MySqlDb;
 import ru.yakimov.config.AppConfiguration;
