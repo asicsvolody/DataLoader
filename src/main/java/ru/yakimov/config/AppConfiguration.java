@@ -7,16 +7,12 @@
 
 package ru.yakimov.config;
 
-import org.springframework.stereotype.Component;
-
 public class AppConfiguration {
 
     private String hdfsHost;
     private String hdfsPort;
 
-    private DBConfiguration workSchema;
-    private String logTable;
-    private String structTable;
+    private DBConfiguration logDB;
 
     private String tempDir;
     private String jobsDir;
@@ -43,17 +39,10 @@ public class AppConfiguration {
         return logsDir;
     }
 
-    public DBConfiguration getWorkSchema() {
-        return workSchema;
+    public DBConfiguration getLogDB() {
+        return logDB;
     }
 
-    public String getLogTable() {
-        return logTable;
-    }
-
-    public String getStructTable() {
-        return structTable;
-    }
 
     public void setHdfsHost(String hdfsHost) {
         this.hdfsHost = hdfsHost;
@@ -75,15 +64,8 @@ public class AppConfiguration {
         this.logsDir = logsDir;
     }
 
-    public void setWorkSchema(DBConfiguration workSchema) {
-        this.workSchema = workSchema;
+    public void setLogDB(DBConfiguration logDB) {
+        this.logDB = logDB;
     }
 
-    public void setLogTable(String logTable) {
-        this.logTable = logTable;
-    }
-
-    public void setStructTable(String structTable) {
-        this.structTable = structTable;
-    }
 }

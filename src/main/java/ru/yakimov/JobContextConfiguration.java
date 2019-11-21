@@ -10,22 +10,17 @@ package ru.yakimov;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.SparkSession;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.*;
 import ru.yakimov.Jobs.DeleteFromTableJob;
 import ru.yakimov.Jobs.ExportSqoopDirToDbJob;
 import ru.yakimov.Jobs.ImportSqoopDbToDirJob;
 import ru.yakimov.Jobs.LoadToHiveFromDirs;
-import ru.yakimov.config.AppConfiguration;
-import ru.yakimov.config.AppXmlLoader;
-import ru.yakimov.config.JobConfiguration;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
+//@ComponentScan (basePackages = "ru.yakimov")
+@ImportResource(locations = "classpath:configBean.xml")
 @Configuration
 public class JobContextConfiguration {
 
@@ -44,10 +39,10 @@ public class JobContextConfiguration {
         return FileSystem.get(loadSpark().sparkContext().hadoopConfiguration());
     }
 
-    @Bean
-    public AppConfiguration loadAppConfig() throws FileNotFoundException, XMLStreamException {
-        return AppXmlLoader.readConfigApp(BootProcessMain.CONF_FILE_PATH);
-    }
+//    @Bean
+//    public AppConfiguration loadAppConfig() throws FileNotFoundException, XMLStreamException {
+//        return AppXmlLoader.readConfigApp(BootProcessMain.CONF_FILE_PATH);
+//    }
 
 
     @Bean

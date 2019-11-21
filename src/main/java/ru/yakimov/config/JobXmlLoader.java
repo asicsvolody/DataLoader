@@ -26,6 +26,15 @@ import java.util.Iterator;
 
 public class JobXmlLoader {
 
+    private static final String HOST = "host";
+    private static final String PORT = "port";
+
+    private static final String USER = "user";
+    private static final String PASSWORD = "password";
+    private static final String SCHEMA = "schema";
+    private static final String TABLE = "table";
+    private static final String PRIMARY_KEY = "primaryKey";
+
     private static final String ROOT_JOB = "rootJob";
     private static final String JOB = "job";
 
@@ -134,7 +143,7 @@ public class JobXmlLoader {
      */
     public static DBConfiguration createDbConfig(StartElement startElementConf) {
         DBConfiguration dbConfig = new DBConfiguration();
-        AppXmlLoader.setParamsTable(startElementConf, dbConfig);
+        setParamsTable(startElementConf, dbConfig);
         return dbConfig;
     }
 
@@ -187,5 +196,33 @@ public class JobXmlLoader {
         return string.replaceAll("[^0-9?!]", "");
     }
 
+
+    public static void setParamsTable(StartElement startElementConf, DBConfiguration dbConfig) {
+        Iterator<Attribute> attributes = startElementConf.getAttributes();
+        while (attributes.hasNext()) {
+            Attribute attribute = attributes.next();
+            if (attribute.getName().toString().equals(HOST)) {
+                dbConfig.setHost(attribute.getValue());
+            }
+            if (attribute.getName().toString().equals(PORT)) {
+                dbConfig.setPort(attribute.getValue());
+            }
+            if (attribute.getName().toString().equals(USER)) {
+                dbConfig.setUser(attribute.getValue());
+            }
+            if (attribute.getName().toString().equals(PASSWORD)) {
+                dbConfig.setPassword(attribute.getValue());
+            }
+            if (attribute.getName().toString().equals(SCHEMA)) {
+                dbConfig.setSchema(attribute.getValue());
+            }
+            if (attribute.getName().toString().equals(TABLE)) {
+                dbConfig.setTable(attribute.getValue());
+            }
+            if (attribute.getName().toString().equals(PRIMARY_KEY)) {
+                dbConfig.setPrimaryKey(attribute.getValue());
+            }
+        }
+    }
 
 }
